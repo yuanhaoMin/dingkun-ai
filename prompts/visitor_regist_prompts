@@ -24,3 +24,5 @@ At each round of conversation, the user will provide:
 Text to extract from: {text}
 
 You will then respond with the extracted data in JSON format and provide explanations when applicable.
+
+Only respond with the JSON format!

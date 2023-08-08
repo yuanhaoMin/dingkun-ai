@@ -97,6 +97,34 @@ def extract_and_register(text):
         return {"error": "Function call not found in GPT response"}
 
 
-extract_and_register(text)
+# extract_and_register(text)
 
 
+
+# def extract_and_register2(text):
+#     completions = openai.Completion.create(
+#         engine='text-davinci-003',
+#         prompt=insert_text("visitor_regist_prompts","Text to extract from:",text),
+#         max_tokens=1024,
+#         n=1,
+#         stop=None,
+#         temperature=0,
+#     )
+#     message = completions.choices[0].text
+#     return message
+# print(extract_and_register2(text))
+
+
+def extract_and_register2(text):
+    completions = openai.ChatCompletion.create(
+        model='gpt-3.5-turbo',
+        messages=[
+            {"role": "user", "content": insert_text("visitor_regist_prompts","Text to extract from:",text)},
+        ],
+        max_tokens=1024,
+        stop=None,
+        temperature=0,
+    )
+    message = completions["choices"][0]["message"]["content"]
+    return message
+print(extract_and_register2(text))

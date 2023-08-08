@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from api.routes.visitor.visitor_registration import extract_and_register
+from api.routes.visitor.visitor_registration import extract_and_register, extract_and_register2
 
 middleware = [
     Middleware(
