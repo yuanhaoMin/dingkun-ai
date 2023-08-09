@@ -1,5 +1,5 @@
 import logging
-from config.api_config import get_openai_key
+from app.config.api_config import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion
 

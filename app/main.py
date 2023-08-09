@@ -1,7 +1,7 @@
 # gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
 # uvicorn main:app --reload
 from fastapi import FastAPI
-from router import visitor_router
+from app.api.router import visitor_router
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
