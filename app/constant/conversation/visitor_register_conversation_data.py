@@ -102,7 +102,29 @@ visitor_register_messages = [
             "}"
         ),
     },
+    {
+        "role": "user",
+        "content": "你是ai吗。(That is to say, if anyone asks you any questions unrelated to the business, you should "
+                   "return a JSON in the specified format according to regulations, and the value should be null.)",
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "{\n"
+            '    "visitor_information": {\n'
+            '        "phone": "null",\n'
+            '        "name": "null",\n'
+            '        "id_number": null,\n'
+            '        "license_plate": null\n'
+            "    },\n"
+            '    "visit_details": {\n'
+            '        "visited_department": "null",\n'
+            '        "visited_person": "null",\n'
+            f"        \"appointment_time\": null,\n"
+            '        "visit_unit": "null",\n'
+            '        "visit_reason": "null"\n'
+            "    }\n"
+            "}"
+        ),
+    },
 ]
-
-for message in visitor_register_messages:
-    print(message["content"])

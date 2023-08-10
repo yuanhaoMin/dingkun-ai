@@ -1,0 +1,30 @@
+visitor_register_schema = {
+    "type": "object",
+    "properties": {
+        "visitor_information": {
+            "type": "object",
+            "properties": {
+                "phone": {"type": ["string", "null"]},
+                "name": {"type": ["string", "null"]},
+                "id_number": {"type": ["string", "null"]},
+                "license_plate": {"type": ["string", "null"]}
+            },
+            "required": ["phone", "name", "id_number", "license_plate"]
+        },
+        "visit_details": {
+            "type": "object",
+            "properties": {
+                "visited_department": {"type": ["string", "null"]},
+                "visited_person": {"type": ["string", "null"]},
+                "appointment_time": {
+                    "type": ["string", "null"],
+                    "pattern": "^(\\d{4}-\\d{2}-\\d{2} (上午|下午)|EXAMPLE_APPOINTMENT_TIME|null)$"
+                },
+                "visit_unit": {"type": ["string", "null"]},
+                "visit_reason": {"type": ["string", "null"]}
+            },
+            "required": ["visited_department", "visited_person", "appointment_time", "visit_unit", "visit_reason"]
+        }
+    },
+    "required": ["visitor_information", "visit_details"]
+}

@@ -1,6 +1,7 @@
 fastapi==0.101.0
+jsonschema==4.19.0
 openai==0.27.8
+pydantic==2.1.1
 python-dotenv==1.0.0
-starlette==0.27.0
-utils==1.0.1
+starlette==0.31.0
 uvicorn==0.23.2
