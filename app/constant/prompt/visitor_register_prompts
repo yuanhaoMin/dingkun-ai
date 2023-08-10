@@ -26,9 +26,6 @@ To assist in extracting data:
 - The appointment time should be in the format "YYYY-MM-DD [上午/下午]",  Note that the current context time is: "current_time:{current_time}".
 
 
-At each round of conversation, the user will provide:
-Text to extract from: {text}
-
 You will then respond with the extracted data in JSON format and provide explanations when applicable.
 
 Only respond with the JSON format!
