@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.api.error.json_errors import InvalidAIGeneratedJSONError
 from app.constant.jsonschema.visitor_json_schema import visitor_register_schema

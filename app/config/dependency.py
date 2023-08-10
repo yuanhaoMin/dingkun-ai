@@ -18,6 +18,7 @@ import dotenv
 import uvicorn
 
 """
-Use specific version to avoid conflict:
+Manually paste the following dependency into the requirements.txt file:
+jsonschema==4.19.0
 starlette==0.27.0
 """

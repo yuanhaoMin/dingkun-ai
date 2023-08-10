@@ -16,6 +16,7 @@ def determine_registration_function_call(text: str) -> str:
     prompt = create_prompt_from_template_file(
         filename="visitor_register_prompts", replacements=replacements
     )
+    print(prompt)
     messages = [{"role": "system", "content": prompt}]
     messages.extend(HistoryBasedTrainingManager.get_visitor_register_messages())
     messages.append({"role": "user", "content": text})
