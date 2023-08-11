@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 class InvalidAIGeneratedJSONError(HTTPException):
     def __init__(self, detail: str):
-        super().__init__(status_code=400, detail=detail)
+        super().__init__(status_code=422, detail=detail)
 
 
 def invalid_ai_generated_json_error_handler(request: Request, exc: InvalidAIGeneratedJSONError):
