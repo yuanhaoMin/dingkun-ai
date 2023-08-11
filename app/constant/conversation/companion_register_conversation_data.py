@@ -53,7 +53,8 @@ companion_register_messages = [
     },
     {
         "role": "user",
-        "content": "你好。"
+        "content": "你好(That is to say, if anyone asks you any questions unrelated to the business, you should "
+                   "return a JSON in the specified format according to regulations, and the value should be null.)。"
     },
     {
         "role": "assistant",
