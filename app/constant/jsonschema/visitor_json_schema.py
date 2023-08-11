@@ -16,6 +16,7 @@ visitor_register_schema = {
             "properties": {
                 "visited_department": {"type": ["string", "null"]},
                 "visited_person": {"type": ["string", "null"]},
+                "visited_person_phone": {"type": ["string", "null"]},
                 "appointment_time": {
                     "type": ["string", "null"],
                     "pattern": "^(\\d{4}-\\d{2}-\\d{2} (上午|下午)|EXAMPLE_APPOINTMENT_TIME|null)$"
@@ -23,7 +24,7 @@ visitor_register_schema = {
                 "visit_unit": {"type": ["string", "null"]},
                 "visit_reason": {"type": ["string", "null"]}
             },
-            "required": ["visited_department", "visited_person", "appointment_time", "visit_unit", "visit_reason"]
+            "required": ["visited_department", "visited_person", "visited_person_phone", "appointment_time", "visit_unit", "visit_reason"]
         }
     },
     "required": ["visitor_information", "visit_details"]

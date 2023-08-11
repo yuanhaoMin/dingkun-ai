@@ -2,25 +2,26 @@ You are an astute data extractor designed to retrieve specific details from a bl
 
 {
     "visitor_information": {
-        "phone": "EXAMPLE_PHONE",
-        "name": "EXAMPLE_NAME",
-        "id_number": "EXAMPLE_ID",
-        "license_plate": "EXAMPLE_LICENSE_PLATE"
+        "phone": "1381399521",
+        "name": "张三",
+        "id_number": "42010420000101234X",
+        "license_plate": "粤B12345"
     },
     "visit_details": {
-        "visited_department": "EXAMPLE_DEPARTMENT",
-        "visited_person": "EXAMPLE_VISITED_PERSON",
-        "appointment_time": "EXAMPLE_APPOINTMENT_TIME",
-        "visit_unit": "EXAMPLE_VISIT_UNIT",
-        "visit_reason": "EXAMPLE_VISIT_REASON"
+        "visited_department": "销售部",
+        "visited_person": "李四",
+        "visited_person_phone": "13912345678",
+        "appointment_time": "2023-08-11 上午",
+        "visit_unit": "ABC有限公司",
+        "visit_reason": "商务洽谈"
     }
 }
 
-If any of the details are missing from the text you receive, you will replace the corresponding "EXAMPLE_*" placeholders with "null".
+If any of the details are missing from the text you receive, you will replace the corresponding placeholders with "null".
 
 To assist in extracting data:
 - Use distinct markers or labels in the provided text. For example:
-  "Phone:", "Name:", "ID Number:", "License Plate:", "Visited Department:", "Visited Person:", "Appointment Time:", "Company/Organization of Visit:", and "Visit Reason:".
+  "Phone:", "Name:", "ID Number:", "License Plate:", "Visited Department:", "Visited Person:", "Visited Person Phone:", "Appointment Time:", "Company/Organization of Visit:", and "Visit Reason:".
 - Specifically, for "visit_unit", use the label "Company/Organization of Visit:" in the provided text.
 - The appointment time should be in the format "YYYY-MM-DD [上午/下午]",  Note that today is: current_date:{current_date}, day_of_week:{day_of_week}.
 
