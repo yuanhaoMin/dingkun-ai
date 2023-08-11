@@ -16,9 +16,17 @@ def determine_registration_function_call(text: str) -> str:
     prompt = create_prompt_from_template_file(
         filename="visitor_register_prompts", replacements=replacements
     )
-    print(prompt)
     messages = [{"role": "system", "content": prompt}]
     messages.extend(HistoryBasedTrainingManager.get_visitor_register_messages())
     messages.append({"role": "user", "content": text})
     return completion(messages)
 
+
+def determine_companion_registration_function_call(text: str) -> str:
+    prompt = create_prompt_from_template_file(
+        filename="visitor_companion_register_prompts", replacements=None
+    )
+    messages = [{"role": "system", "content": prompt}]
+    messages.extend(HistoryBasedTrainingManager.get_visitor_companion_register_messages())
+    messages.append({"role": "user", "content": text})
+    return completion(messages)

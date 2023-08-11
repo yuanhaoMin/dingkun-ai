@@ -10,6 +10,11 @@ def create_prompt_from_template_file(filename: str, replacements: dict) -> str:
         os.path.join(current_dir, "../", "constant", "prompt", filename)
     )
 
+    # 不用替换，直接传回文本内容
+    if replacements is None:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+
     # 读取文件内容
     with open(file_path, "r", encoding="utf-8") as file:
         prompt_template = file.read()

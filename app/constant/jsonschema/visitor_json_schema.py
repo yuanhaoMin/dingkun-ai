@@ -29,3 +29,18 @@ visitor_register_schema = {
     },
     "required": ["visitor_information", "visit_details"]
 }
+companion_register_schema = {
+    "type": "object",
+    "properties": {
+        "companion_information": {
+            "type": "object",
+            "properties": {
+                "name": {"type": ["string", "null"]},
+                "phone": {"type": ["string", "null"]},
+                "id_number": {"type": ["string", "null"]}
+            },
+            "required": ["name", "phone", "id_number"]
+        }
+    },
+    "required": ["companion_information"]
+}
