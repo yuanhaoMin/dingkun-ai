@@ -1,6 +1,5 @@
 import json
-
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from app.api.error.report_errors import InvalidSVGGeneratedError
 from app.logic import data_report_logic
@@ -24,9 +23,8 @@ async def generate_data_report(request_text: UserInputText):
     try:
         report = json.loads(report_str)
     except json.JSONDecodeError:
-        raise InvalidSVGGeneratedError(detail="Failed to generate SVG from provided data.")
+        raise InvalidSVGGeneratedError(
+            detail="Failed to generate SVG from provided data."
+        )
 
-    return DataReportResponse(data=report['data'], status_code=report['status_code'])
-
-
-
+    return DataReportResponse(data=report["data"], status_code=report["status_code"])

@@ -10,3 +10,5 @@ mysqlclient
 numpy
 seaborn
 matplotlib
+schedule
+adjustText

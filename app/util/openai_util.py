@@ -6,28 +6,32 @@ from openai import ChatCompletion
 logger = logging.getLogger(__name__)
 
 
-def completion(messages: list[dict]) -> str:
-    contents = []
+def completion(
+    messages: list[dict], model="gpt-3.5-turbo", temperature=0, stream=True
+) -> str:
     retry_count = 0
     max_retries = 2
+
     while True:
         try:
             response = ChatCompletion.create(
                 api_key=get_openai_key(),
-                model="gpt-3.5-turbo",
+                model=model,
                 messages=messages,
-                request_timeout=2,
-                temperature=0,
-                stream=True,
+                request_timeout=10,
+                temperature=temperature,  # 这是模型输出的随机度
+                stream=stream,
             )
-            for stream_response in response:
-                delta = stream_response["choices"][0]["delta"]
-                finish_reason = stream_response["choices"][0]["finish_reason"]
-                if hasattr(delta, "content"):
-                    contents.append(delta.content)
-                if finish_reason == "stop":
-                    full_response_text = "".join(contents)
-            return full_response_text
+
+            if stream:
+                contents = []
+                for stream_response in response:
+                    delta = stream_response["choices"][0]["delta"]
+                    if hasattr(delta, "content"):
+                        contents.append(delta.content)
+                return "".join(contents)
+            else:
+                return response.choices[0].message["content"]
         except Exception as e:
             retry_count += 1
             if retry_count > max_retries:

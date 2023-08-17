@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 
 
@@ -20,3 +21,13 @@ def parse_relative_date(relative_time):
     # ... 其他相对时间的解析
 
     return None
+
+
+def timeit(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        print(f"{func.__name__} 耗时: {time.time() - start_time}秒")
+        return result
+
+    return wrapper

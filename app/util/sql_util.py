@@ -1,6 +1,7 @@
 from app.db.session.mysql_db import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect
+from sqlalchemy import text
 from typing import Dict, List, Union, Type
 import sqlparse
 
@@ -14,17 +15,19 @@ def get_db():
 
 
 def execute_sql(db: Session, sql: str, limit: int = 5):
-    # 添加LIMIT子句
-    if "LIMIT" not in sql.upper():
-        sql += f" LIMIT {limit}"
+    # # 添加LIMIT子句
+    # if "LIMIT" not in sql.upper():
+    #     sql += f" LIMIT {limit}"
 
-    result = db.execute(sql)
+    result = db.execute(text(sql))
     column_names = result.keys()
     # 将每行转换为字典
     return [dict(zip(column_names, row)) for row in result.fetchall()]
 
 
-def validate_sql_against_model(sql: str, model: Type) -> Dict[str, Union[bool, List[str]]]:
+def validate_sql_against_model(
+    sql: str, model: Type
+) -> Dict[str, Union[bool, List[str]]]:
     """
     验证给定的 SQL 语句是否符合 SQLAlchemy 模型的结构。
 
@@ -46,19 +49,19 @@ def validate_sql_against_model(sql: str, model: Type) -> Dict[str, Union[bool, L
     model_columns = [column.name for column in inspect(model).columns]
 
     # 初始化结果字典
-    result = {
-        'valid': True,
-        'errors': []
-    }
+    result = {"valid": True, "errors": []}
 
     # 比较解析的 SQL 列名与模型的列名
-    referenced_columns = [str(token.get_real_name()) for token in statement.tokens if
-                          isinstance(token, sqlparse.sql.Identifier)]
+    referenced_columns = [
+        str(token.get_real_name())
+        for token in statement.tokens
+        if isinstance(token, sqlparse.sql.Identifier)
+    ]
 
     for column in referenced_columns:
         if column not in model_columns:
             error_message = f"SQL 中的列 {column} 在模型中未找到。"
-            result['errors'].append(error_message)
-            result['valid'] = False
+            result["errors"].append(error_message)
+            result["valid"] = False
 
     return result
