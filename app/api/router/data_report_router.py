@@ -17,7 +17,7 @@ class DataReportResponse(BaseModel):
 
 
 @router.post("/generate")
-async def generate_data_report(request_text: UserInputText):
+def generate_data_report(request_text: UserInputText):
     report_str = data_report_logic.generate_data_report(request_text.text)
 
     try:

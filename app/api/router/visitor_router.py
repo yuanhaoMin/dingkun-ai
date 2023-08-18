@@ -15,7 +15,7 @@ router = APIRouter(
 
 
 @router.post("/registration/function-call")
-async def determine_registration_function_call(request: DetermineFunctionCallRequest):
+def determine_registration_function_call(request: DetermineFunctionCallRequest):
     result_str = visitor_logic.determine_registration_function_call(request.text)
 
     try:
@@ -31,7 +31,7 @@ async def determine_registration_function_call(request: DetermineFunctionCallReq
 
 
 @router.post("/companion/registration/function-call")
-async def determine_companion_registration_function_call(request: DetermineFunctionCallRequest):
+def determine_companion_registration_function_call(request: DetermineFunctionCallRequest):
     result_str = visitor_logic.determine_companion_registration_function_call(request.text)
 
     try:
