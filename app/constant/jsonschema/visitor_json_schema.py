@@ -44,3 +44,63 @@ companion_register_schema = {
     },
     "required": ["companion_information"]
 }
+
+companion_register_schema_old = {
+    "type": "object",
+    "properties": {
+        "visitorChildDTOList": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "useName": {"type": ["string", "null"]},
+                    "usePhone": {"type": ["string", "null"]},
+                    "idCard": {"type": ["string", "null"]},
+                    "plateNumber": {"type": ["string", "null"]}
+                },
+                "required": ["useName", "usePhone", "idCard", "plateNumber"]
+            }
+        }
+    },
+    "required": ["visitorChildDTOList"]
+}
+
+visitor_register_schema_old = {
+    "type": "object",
+    "properties": {
+        "appointmentTime": {
+            "type": ["string", "null"],
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|null)$"
+        },
+        "companyName": {
+            "type": ["string", "null"]
+        },
+        "contactOrg": {
+            "type": ["string", "null"]
+        },
+        "contactPerson": {
+            "type": ["string", "null"]
+        },
+        "idCard": {
+            "type": ["string", "null"]
+        },
+        "plateNumber": {
+            "type": ["string", "null"]
+        },
+        "remark": {
+            "type": ["string", "null"]
+        },
+        "useName": {
+            "type": ["string", "null"]
+        },
+        "usePhone": {
+            "type": ["string", "null"]
+        },
+        "visitingReason": {
+            "type": ["string", "null"],
+            "enum": ["普通来访", "外来施工", "null"]
+        }
+    },
+    "required": ["appointmentTime", "companyName", "contactOrg", "contactPerson", "idCard", "plateNumber", "remark", "useName", "usePhone", "visitingReason"]
+}
+

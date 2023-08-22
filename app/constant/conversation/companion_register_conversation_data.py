@@ -69,3 +69,80 @@ companion_register_messages = [
         ),
     },
 ]
+
+companion_register_messages_old = [
+    {
+        "role": "user",
+        "content": "我是访客张三，随行的是李红，她的电话是13500112233，身份证号是420105198701011234。"
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "{\n"
+            '    "visitorChildDTOList": [{\n'
+            '        "useName": "李红",\n'
+            '        "usePhone": "13500112233",\n'
+            '        "idCard": "420105198701011234",\n'
+            '        "plateNumber": null\n'
+            "    }]\n"
+            "}"
+        ),
+    },
+    {
+        "role": "user",
+        "content": (
+            "他的身份证是330206199601011234，电话则是13777778888。"
+        ),
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "{\n"
+            '    "visitorChildDTOList": [{\n'
+            '        "useName": null,\n'  # Note: We don't have a name in the user's input for this one.
+            '        "usePhone": "13777778888",\n'
+            '        "idCard": "330206199601011234",\n'
+            '        "plateNumber": null\n'
+            "    }]\n"
+            "}"
+        ),
+    },
+    {
+        "role": "user",
+        "content": (
+            "周末，我和赵六都会去。不过他的其他信息我现在不知道。"
+        ),
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "{\n"
+            '    "visitorChildDTOList": [{\n'
+            '        "useName": "赵六",\n'
+            '        "usePhone": null,\n'
+            '        "idCard": null,\n'
+            '        "plateNumber": null\n'
+            "    }]\n"
+            "}"
+        ),
+    },
+    {
+        "role": "user",
+        "content": "你好(That is to say, if anyone asks you any questions unrelated to the business, you should "
+                   "return a JSON in the specified format according to regulations, and the value should be null.)。"
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "{\n"
+            '    "visitorChildDTOList": [{\n'
+            '        "useName": null,\n'
+            '        "usePhone": null,\n'
+            '        "idCard": null,\n'
+            '        "plateNumber": null\n'
+            "    }]\n"
+            "}"
+        ),
+    },
+]
+
