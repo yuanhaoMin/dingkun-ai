@@ -17,11 +17,14 @@ If any of the details are missing from the text you receive, you will replace th
 
 To assist in extracting data:
 - Use distinct markers or labels in the provided text. For example:
-  "Phone:", "Name:", "ID Card:", "Plate Number:", "Contact Org:", "Contact Person:", "Appointment Time:", "Company Name:", and "Visiting Reason:".
-- Specifically, for "companyName", use the label "Company Name:" in the provided text.
+  "usePhone:", "useName:", "ID Card:", "Plate Number:", "Contact Org:", "Contact Person:", "Appointment Time:", "Company Name:", and "Visiting Reason:".
 - The appointment time should be in the format "YYYY-MM-DD". Note that today is: current_date:{current_date}, day_of_week:{day_of_week}.
 - For "visitingReason", the possible options are "普通来访" and "外来施工".
+- For "contactOrg", you must only extract values from the provided list: departments:{departments}. Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
+  The "contactOrg" value should be limited to the options in the departments list, or return "null".
 
+Even if you identify just a single data point from the text (e.g., "My name is 王龙"), ensure to return that extracted detail in the JSON response.
+All missing pieces of data should be filled with "null".
 You will then respond with the extracted data in JSON format and provide explanations when applicable.
 Only respond with the JSON format!
 

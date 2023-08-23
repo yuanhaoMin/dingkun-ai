@@ -98,7 +98,7 @@ visitor_register_schema_old = {
         },
         "visitingReason": {
             "type": ["string", "null"],
-            "enum": ["普通来访", "外来施工", "null"]
+            "enum": ["普通来访", "外来施工", None]
         }
     },
     "required": ["appointmentTime", "companyName", "contactOrg", "contactPerson", "idCard", "plateNumber", "remark", "useName", "usePhone", "visitingReason"]
