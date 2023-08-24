@@ -1,5 +1,5 @@
 from app.logic.conversation_training_logic import HistoryBasedTrainingManager
-from app.util.openai_util import completion
+from app.util.openai_util import completion, Conversation
 from app.util.text_util import create_prompt_from_template_file
 from datetime import datetime, timedelta
 from collections import OrderedDict
@@ -117,3 +117,33 @@ def remove_expired_sessions():
 
     for key in expired_keys:
         SESSION_STORE.pop(key)
+
+
+def smart_determine_companion_registration_function_call(sessionId: str, text: str, department_names: List[str]) -> str:
+    if not department_names:
+        department_names = []
+    departments_str = ",".join(department_names)
+    replacements = {"current_date:": current_date,
+                    "day_of_week:": day_of_week,
+                    "departments:": departments_str
+                    }
+    prompt = create_prompt_from_template_file(
+        filename="visitor_register_smart_prompts", replacements=replacements
+    )
+
+    if sessionId not in SESSION_STORE:
+        conversation = Conversation(prompt, num_of_round=5)
+        SESSION_STORE[sessionId] = {
+            "conversation": conversation,
+            "timestamp": datetime.now()
+        }
+    else:
+        conversation = SESSION_STORE[sessionId]["conversation"]
+        SESSION_STORE[sessionId]["timestamp"] = datetime.now()
+
+    response = conversation.ask(text)
+    conversation.save_messages_to_file()
+    remove_expired_sessions()
+    prune_sessions()
+
+    return response

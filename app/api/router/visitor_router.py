@@ -8,11 +8,11 @@ from app.logic.visitor_logic import SESSION_STORE, update_session_data, prune_se
 from app.model.schema.visitor_schema import DetermineFunctionCallRequest, DetermineFunctionCallRequestOld
 from app.util.data_validator import validate_json
 import logging
+
 router = APIRouter(
     prefix="/visitor",
     tags=["visitor"],
 )
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -50,7 +50,6 @@ logging.basicConfig(level=logging.INFO)
 
 @router.post("/registration/function-call")
 def determine_registration_function_call(request: DetermineFunctionCallRequestOld):
-
     department_names_list = request.departmentNames
     result_str = visitor_logic.determine_registration_function_call_old(request.text, department_names_list)
     try:
@@ -90,5 +89,15 @@ def determine_companion_registration_function_call(request: DetermineFunctionCal
     valid, errors = validate_json(result, companion_register_schema_old)
     if not valid:
         raise InvalidAIGeneratedJSONError(detail=", ".join(errors))
+
+    return result
+
+
+@router.post("/smart-registration/function-call")
+def smart_determine_registration_function_call(request: DetermineFunctionCallRequestOld):
+    department_names = request.departmentNames
+    result_str = visitor_logic.smart_determine_companion_registration_function_call(request.sessionId,request.text, department_names)
+
+    result = json.loads(result_str)
 
     return result

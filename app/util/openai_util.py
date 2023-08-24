@@ -40,3 +40,30 @@ def completion(messages: list[dict]) -> str:
                     "Failed to get completion response from OpenAI API. Retrying..."
                 )
                 continue
+
+
+class Conversation:
+    def __init__(self, prompt, num_of_round):
+        self.prompt = prompt
+        self.num_of_round = num_of_round
+        self.messages = []
+        self.messages.append({"role": "system", "content": self.prompt})
+
+    def ask(self, question):
+        try:
+            self.messages.append({"role": "user", "content": question})
+            message = completion(self.messages)
+        except Exception as e:
+            print(e)
+            return e
+
+        self.messages.append({"role": "assistant", "content": message})
+
+        if len(self.messages) > self.num_of_round*2 + 1:
+            del self.messages[1:3]
+        return message
+
+    def save_messages_to_file(self, filename="temp.txt"):
+        with open(filename, 'w') as file:
+            for message in self.messages:
+                file.write(f"{message['role']}: {message['content']}\n")

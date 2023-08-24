@@ -104,3 +104,101 @@ visitor_register_schema_old = {
     "required": ["appointmentTime", "companyName", "contactOrg", "contactPerson", "idCard", "plateNumber", "remark", "useName", "usePhone", "visitingReason"]
 }
 
+
+visitor_register_schema_smart_1 = {
+    "type": "object",
+    "properties": {
+        "appointmentTime":  {
+            "type": ["string", "null"],
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|null)$"
+        },
+        "companyName": {"type": ["string", "null"]},
+        "contactOrg": {"type": ["string", "null"]},
+        "contactPerson": {"type": ["string", "null"]},
+        "idCard": {"type": ["string", "null"]},
+        "plateNumber": {"type": ["string", "null"]},
+        "remark": {"type": ["string", "null"]},
+        "useName": {"type": "string"},
+        "usePhone": {"type": "string"},
+        "visitingReason": {
+            "type": "string",
+            "enum": ["普通来访", "外来施工"]
+        }
+    },
+    "required": ["useName", "usePhone"]
+}
+
+visitor_register_schema_smart_2 = {
+    "type": "object",
+    "properties": {
+        "visitorChildDTOList": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "useName": {"type": ["string", "null"]},
+                    "usePhone": {"type": ["string", "null"]},
+                    "idCard": {"type": ["string", "null"]},
+                    "plateNumber": {"type": ["string", "null"]}
+                }
+            }
+        }
+    }
+}
+
+
+data = [
+    {
+        "appointmentTime": "2023-09-01",
+        "companyName": "ABC有限公司",
+        "contactOrg": "销售部",
+        "contactPerson": None,
+        "idCard": "42010420000101234X",
+        "plateNumber": "粤B12345",
+        "remark": "商务洽谈",
+        "useName": None,
+        "usePhone": "1381399521",
+        "visitingReason": "普通来访"
+    },
+    {
+        "visitorChildDTOList": [
+            {
+                "useName": "李红",
+                "usePhone": "13998765432",
+                "idCard": None,
+                "plateNumber": "粤B67890"
+            },
+            {
+                "useName": "王青",
+                "usePhone": "13765432109",
+                "idCard": None,
+                "plateNumber": None
+            }
+        ]
+    }
+]
+
+from jsonschema import validate, ValidationError
+
+
+def validate_jsons(json_list):
+    errors = []
+
+    for idx, json_obj in enumerate(json_list):
+        try:
+            if idx == 0:
+                validate(instance=json_obj, schema=visitor_register_schema_smart_1)
+            elif idx == 1:
+                validate(instance=json_obj, schema=visitor_register_schema_smart_2)
+        except ValidationError as e:
+            path_to_error = ".".join(str(p) for p in e.path)
+            errors.append(f"JSON {idx + 1} is not valid at key '{path_to_error}'. Reason: {e.message}")
+
+    if errors:
+        raise ValueError("\n".join(errors))
+
+
+try:
+    validate_jsons(data)
+except ValueError as e:
+    print(e)
