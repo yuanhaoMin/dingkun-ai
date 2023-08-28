@@ -1,11 +1,14 @@
 import json
+import re
 from fastapi import APIRouter, HTTPException
 from app.api.error.json_errors import InvalidAIGeneratedJSONError
 from app.constant.jsonschema.visitor_json_schema import visitor_register_schema, companion_register_schema, \
     visitor_register_schema_old, companion_register_schema_old
 from app.logic import visitor_logic
 from app.logic.visitor_logic import SESSION_STORE, update_session_data, prune_sessions, remove_expired_sessions
-from app.model.schema.visitor_schema import DetermineFunctionCallRequest, DetermineFunctionCallRequestOld
+from app.model.schema.visitor_schema import DetermineFunctionCallRequest, DetermineFunctionCallRequestOld, \
+    DetermineFunctionCallRequestSmart
+from app.util.chinese_phonetic_util import PyEditDistance
 from app.util.data_validator import validate_json
 import logging
 
@@ -94,10 +97,90 @@ def determine_companion_registration_function_call(request: DetermineFunctionCal
 
 
 @router.post("/smart-registration/function-call")
-def smart_determine_registration_function_call(request: DetermineFunctionCallRequestOld):
-    department_names = request.departmentNames
-    result_str = visitor_logic.smart_determine_companion_registration_function_call(request.sessionId,request.text, department_names)
+def smart_determine_registration_function_call(request: DetermineFunctionCallRequestSmart):
+    # 解析departmentsJson字段以获取部门名称和部门-人员关系
+    try:
+        # 解析 departmentsJson
+        departments_data = json.loads(request.departmentsJson)
+        department_codes = {department['name']: department['departmentCode'] for department in
+                            departments_data}
+        person_ids = {person['personName']: person['id'] for department in departments_data for person in
+                      department['persons']}
+    except json.JSONDecodeError:
+        print("Error: Failed to parse departmentsJson!")
+        return {}
+
+    department_names = []
+    department_persons_dict = {}
+
+    for department in departments_data:
+        department_name = department.get("name")
+        if department_name:
+            department_names.append(department_name)
+
+        persons = department.get("persons", [])
+        person_names = [person["personName"] for person in persons]
+        if person_names:
+            department_persons_dict[department_name] = person_names
+
+        subdepartments = department.get("subdepartments", [])
+        for subdepartment in subdepartments:
+            subdepartment_name = subdepartment.get("name")
+            if subdepartment_name:
+                department_names.append(subdepartment_name)
+            persons = subdepartment.get("persons", [])
+            person_names = [person["personName"] for person in persons]
+            if person_names:
+                department_persons_dict[subdepartment_name] = person_names
+
+    result_str = visitor_logic.smart_determine_companion_registration_function_call(
+        request.sessionId,
+        request.text,
+        department_names
+    )
 
     result = json.loads(result_str)
 
-    return result
+    pyedit = PyEditDistance(department_persons_dict)
+
+    for entry in result:
+        contact_person = entry.get('contactPerson')
+        contact_org = entry.get('contactOrg')
+
+        if contact_person and contact_org:
+            relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org,
+                                                                                             contact_person)
+
+            if relationship == "受访部门存在，受访人存在":
+                entry['contactOrg'] = closest_department
+                entry['contactPerson'] = closest_person
+                entry['departmentCode'] = department_codes.get(closest_department)
+                entry['id'] = person_ids.get(closest_person)
+            elif relationship == "受访部门存在，受访人不存在":
+                entry['contactOrg'] = closest_department
+                # entry['contactPerson'] = None
+                entry['departmentCode'] = department_codes.get(closest_department)
+                entry['id'] = None
+            elif relationship == "受访部门不存在，受访人存在":
+                # entry['contactOrg'] = None
+                entry['contactPerson'] = closest_person
+                entry['message'] = "受访部门不存在，受访人存在"
+                entry['departmentCode'] = None
+                entry['id'] = person_ids.get(closest_person)
+            elif relationship == "受访部门存在，受访人不对应":
+                entry['contactOrg'] = closest_department
+                entry['contactPerson'] = closest_person
+                entry['departmentCode'] = department_codes.get(closest_department)
+                entry['id'] = person_ids.get(closest_person)
+            else:
+                # entry['contactOrg'] = None
+                # entry['contactPerson'] = None
+                entry['departmentCode'] = None
+                entry['id'] = None
+
+        final_result = {
+            'sessionId': request.sessionId,
+            'data': result
+        }
+    print("final_result:", final_result)
+    return final_result

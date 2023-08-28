@@ -1,3 +1,6 @@
+from jsonschema import validate, ValidationError
+
+
 visitor_register_schema = {
     "type": "object",
     "properties": {
@@ -24,7 +27,8 @@ visitor_register_schema = {
                 "visit_unit": {"type": ["string", "null"]},
                 "visit_reason": {"type": ["string", "null"]}
             },
-            "required": ["visited_department", "visited_person", "visited_person_phone", "appointment_time", "visit_unit", "visit_reason"]
+            "required": ["visited_department", "visited_person", "visited_person_phone", "appointment_time",
+                         "visit_unit", "visit_reason"]
         }
     },
     "required": ["visitor_information", "visit_details"]
@@ -101,14 +105,14 @@ visitor_register_schema_old = {
             "enum": ["普通来访", "外来施工", None]
         }
     },
-    "required": ["appointmentTime", "companyName", "contactOrg", "contactPerson", "idCard", "plateNumber", "remark", "useName", "usePhone", "visitingReason"]
+    "required": ["appointmentTime", "companyName", "contactOrg", "contactPerson", "idCard", "plateNumber", "remark",
+                 "useName", "usePhone", "visitingReason"]
 }
-
 
 visitor_register_schema_smart_1 = {
     "type": "object",
     "properties": {
-        "appointmentTime":  {
+        "appointmentTime": {
             "type": ["string", "null"],
             "pattern": "^(\\d{4}-\\d{2}-\\d{2}|null)$"
         },
@@ -146,7 +150,6 @@ visitor_register_schema_smart_2 = {
     }
 }
 
-
 data = [
     {
         "appointmentTime": "2023-09-01",
@@ -178,8 +181,6 @@ data = [
     }
 ]
 
-from jsonschema import validate, ValidationError
-
 
 def validate_jsons(json_list):
     errors = []
@@ -197,8 +198,7 @@ def validate_jsons(json_list):
     if errors:
         raise ValueError("\n".join(errors))
 
-
-try:
-    validate_jsons(data)
-except ValueError as e:
-    print(e)
+# try:
+#     validate_jsons(data)
+# except ValueError as e:
+#     print(e)
