@@ -122,8 +122,8 @@ visitor_register_schema_smart_1 = {
         "idCard": {"type": ["string", "null"]},
         "plateNumber": {"type": ["string", "null"]},
         "remark": {"type": ["string", "null"]},
-        "useName": {"type": "string"},
-        "usePhone": {"type": "string"},
+        "useName": {"type": ["string", "null"]},
+        "usePhone": {"type": ["string", "null"]},
         "visitingReason": {
             "type": "string",
             "enum": ["普通来访", "外来施工"]
@@ -198,7 +198,7 @@ def validate_jsons(json_list):
     if errors:
         raise ValueError("\n".join(errors))
 
-# try:
-#     validate_jsons(data)
-# except ValueError as e:
-#     print(e)
+try:
+    validate_jsons(data)
+except ValueError as e:
+    print(e)

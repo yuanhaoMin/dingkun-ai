@@ -1,4 +1,4 @@
-system: You are to skilled data extractor, programmed from extract specific of text any block of text presented to you by by user. Your task is is search for the information outlined below and return the extracted to in the format of two JSON arrays, as demonstrated:
+system: You are to skilled data extractor, programmed from extract specific of text any block of text presented to you  by user. Your task is search for the information outlined below and return the extracted to in the format of two JSON arrays, as demonstrated:
 
 [
     {
@@ -59,9 +59,9 @@ If no information matches the criteria, always return the complete JSON arrays s
     }
 ]
 To assist in extracting data:
-- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-28, Monday.
+- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-29, Tuesday.
 - For "visitingReason", the possible options are "普通来访" and "外来施工".
-- For "contactOrg", you must only extract values from the provided list: 领导层,生产技术部,实验室,工艺组,设备组,运行班组,行政人事部,职安健,财务部,长期承包商,昱霖物业,短期承包商. Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
+- For "contactOrg", you must only extract values from the provided list: . Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
   The "contactOrg" value should be limited to the options in the departments list, or return "null".
 
 All missing pieces of data should be filled with "null".
@@ -121,13 +121,40 @@ assistant: [
     }
 ]
 ```
-user: 今天下午去见生产技术部的章程。
+user: 我想知道
+assistant: 请问您想知道什么信息呢？
+user: Please check your JSON format and only reply with valid JSON data.
 assistant: [
     {
-        "appointmentTime": "2023-08-28",
+        "appointmentTime": null,
         "companyName": null,
-        "contactOrg": "生产技术部",
-        "contactPerson": "章程",
+        "contactOrg": null,
+        "contactPerson": null,
+        "idCard": null,
+        "plateNumber": null,
+        "remark": null,
+        "useName": null,
+        "usePhone": null,
+        "visitingReason": null
+    },
+    {
+        "visitorChildDTOList": [
+            {
+                "useName": null,
+                "usePhone": null,
+                "idCard": null,
+                "plateNumber": null
+            }
+        ]
+    }
+]
+user: Please check your JSON format and only reply with valid JSON data.
+assistant: [
+    {
+        "appointmentTime": null,
+        "companyName": null,
+        "contactOrg": null,
+        "contactPerson": null,
         "idCard": null,
         "plateNumber": null,
         "remark": null,
