@@ -1,16 +1,9 @@
-import json
-import re
-from fastapi import APIRouter, HTTPException
-from app.api.error.json_errors import InvalidAIGeneratedJSONError
-from app.constant.jsonschema.visitor_json_schema import visitor_register_schema, companion_register_schema, \
-    visitor_register_schema_old, companion_register_schema_old
-from app.logic import visitor_logic
-from app.logic.visitor_logic import SESSION_STORE, prune_sessions, remove_expired_sessions
-from app.model.schema.visitor_schema import DetermineFunctionCallRequest, DetermineFunctionCallRequestOld, \
-    DetermineFunctionCallRequestSmart
-from app.util.chinese_phonetic_util import PyEditDistance
-from app.util.data_validator import validate_json
 import logging
+import json
+from fastapi import APIRouter
+from app.logic import visitor_logic
+from app.model.schema.visitor_schema import DetermineFunctionCallRequestSmart
+from app.util.chinese_phonetic_util import PyEditDistance
 
 router = APIRouter(
     prefix="/visitor",
@@ -18,6 +11,7 @@ router = APIRouter(
 )
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # @router.post("/registration/function-call")
@@ -86,7 +80,7 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
                 for subdepartment in subdepartments:
                     handle_department(subdepartment, department_names, department_persons_dict)
         except json.JSONDecodeError:
-            print("Error: Failed to parse departmentsJson!")
+            logger.warning("Error: Failed to parse departmentsJson!")
 
     result_str = visitor_logic.smart_determine_companion_registration_function_call(
         request.sessionId,
