@@ -1,5 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from typing import List, Optional
+
+
+# {
+#   "sessionId": "abc123",
+#   "text": "Some text here",
+#   "departments": [
+#     {"id": 1, "name": "HR"},
+#     {"id": 2, "name": "Engineering"}
+#   ]
+# }
+
+class Department(BaseModel):
+    id: int
+    name: str
 
 
 class DetermineFunctionCallRequest(BaseModel):
-    text: str = Field(min_length=1)
+    sessionId: str
+    text: str
+    departments: Optional[List[Department]] = None

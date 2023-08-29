@@ -6,32 +6,28 @@ from openai import ChatCompletion
 logger = logging.getLogger(__name__)
 
 
-def completion(
-    messages: list[dict], model="gpt-3.5-turbo", temperature=0, stream=True
-) -> str:
+def completion(messages: list[dict]) -> str:
+    contents = []
     retry_count = 0
     max_retries = 2
-
     while True:
         try:
             response = ChatCompletion.create(
                 api_key=get_openai_key(),
-                model=model,
+                model="gpt-3.5-turbo",
                 messages=messages,
-                request_timeout=10,
-                temperature=temperature,  # 这是模型输出的随机度
-                stream=stream,
+                request_timeout=2,
+                temperature=0,
+                stream=True,
             )
-
-            if stream:
-                contents = []
-                for stream_response in response:
-                    delta = stream_response["choices"][0]["delta"]
-                    if hasattr(delta, "content"):
-                        contents.append(delta.content)
-                return "".join(contents)
-            else:
-                return response.choices[0].message["content"]
+            for stream_response in response:
+                delta = stream_response["choices"][0]["delta"]
+                finish_reason = stream_response["choices"][0]["finish_reason"]
+                if hasattr(delta, "content"):
+                    contents.append(delta.content)
+                if finish_reason == "stop":
+                    full_response_text = "".join(contents)
+            return full_response_text
         except Exception as e:
             retry_count += 1
             if retry_count > max_retries:
@@ -44,3 +40,30 @@ def completion(
                     "Failed to get completion response from OpenAI API. Retrying..."
                 )
                 continue
+
+
+class Conversation:
+    def __init__(self, prompt, num_of_round):
+        self.prompt = prompt
+        self.num_of_round = num_of_round
+        self.messages = []
+        self.messages.append({"role": "system", "content": self.prompt})
+
+    def ask(self, question):
+        try:
+            self.messages.append({"role": "user", "content": question})
+            message = completion(self.messages)
+        except Exception as e:
+            print(e)
+            return e
+
+        self.messages.append({"role": "assistant", "content": message})
+
+        if len(self.messages) > self.num_of_round*2 + 1:
+            del self.messages[1:3]
+        return message
+
+    def save_messages_to_file(self, filename="temp.txt"):
+        with open(filename, 'w') as file:
+            for message in self.messages:
+                file.write(f"{message['role']}: {message['content']}\n")

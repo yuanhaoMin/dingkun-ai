@@ -16,6 +16,7 @@ router = APIRouter(
 
 @router.post("/registration/function-call")
 def determine_registration_function_call(request: DetermineFunctionCallRequest):
+
     result_str = visitor_logic.determine_registration_function_call(request.text)
 
     try:
@@ -23,9 +24,9 @@ def determine_registration_function_call(request: DetermineFunctionCallRequest):
     except json.JSONDecodeError:
         raise InvalidAIGeneratedJSONError(detail="Failed to parse JSON from function result.")
 
-    valid, errors = validate_json(result, visitor_register_schema)
-    if not valid:
-        raise InvalidAIGeneratedJSONError(detail=", ".join(errors))
+    # valid, errors = validate_json(result, visitor_register_schema)
+    # if not valid:
+    #     raise InvalidAIGeneratedJSONError(detail=", ".join(errors))
 
     return result
 
