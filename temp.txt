@@ -59,9 +59,9 @@ If no information matches the criteria, always return the complete JSON arrays s
     }
 ]
 To assist in extracting data:
-- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-29, Tuesday.
+- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-30, Wednesday.
 - For "visitingReason", the possible options are "普通来访" and "外来施工".
-- For "contactOrg", you must only extract values from the provided list: . Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
+- For "contactOrg", you must only extract values from the provided list: 领导层,生产技术部,实验室,工艺组,设备组,运行班组,行政人事部,职安健,财务部,长期承包商,昱霖物业,短期承包商. Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
   The "contactOrg" value should be limited to the options in the departments list, or return "null".
 
 All missing pieces of data should be filled with "null".
@@ -121,9 +121,11 @@ assistant: [
     }
 ]
 ```
-user: 我想知道
-assistant: 请问您想知道什么信息呢？
-user: Please check your JSON format and only reply with valid JSON data.
+user: 所以好像有小王，小张那个。(Ignore the irrelevant remarks made by the user, only return the specified 
+        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
+        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
+        JSON data unless the user explicitly requests a change in a specific item.
+        
 assistant: [
     {
         "appointmentTime": null,
@@ -148,24 +150,63 @@ assistant: [
         ]
     }
 ]
-user: Please check your JSON format and only reply with valid JSON data.
+user: 我带着小李，明天上午去拍的月比13456徐建领导层的小王。(Ignore the irrelevant remarks made by the user, only return the specified 
+        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
+        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
+        JSON data unless the user explicitly requests a change in a specific item.
+        
 assistant: [
     {
-        "appointmentTime": null,
+        "appointmentTime": "2023-08-31",
         "companyName": null,
-        "contactOrg": null,
-        "contactPerson": null,
+        "contactOrg": "领导层",
+        "contactPerson": "徐建",
         "idCard": null,
-        "plateNumber": null,
+        "plateNumber": "月比13456",
         "remark": null,
-        "useName": null,
+        "useName": "小王",
         "usePhone": null,
         "visitingReason": null
     },
     {
         "visitorChildDTOList": [
             {
+                "useName": "小李",
+                "usePhone": null,
+                "idCard": null,
+                "plateNumber": null
+            }
+        ]
+    }
+]
+user: 勇气电话是13423310访客姓名张璐在身份证号440018319991112222，呃，要建市场部的翟利利135100121对对预约时间是今天下午来访单位深圳市嗯，钱坤物流有限公司拜访室友是进来施工。(Ignore the irrelevant remarks made by the user, only return the specified 
+        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
+        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
+        JSON data unless the user explicitly requests a change in a specific item.
+        
+assistant: [
+    {
+        "appointmentTime": "2023-08-30",
+        "companyName": "深圳市钱坤物流有限公司",
+        "contactOrg": "市场部",
+        "contactPerson": "翟利利",
+        "idCard": "440018319991112222",
+        "plateNumber": null,
+        "remark": null,
+        "useName": "张璐",
+        "usePhone": "13423310",
+        "visitingReason": "外来施工"
+    },
+    {
+        "visitorChildDTOList": [
+            {
                 "useName": null,
+                "usePhone": null,
+                "idCard": null,
+                "plateNumber": null
+            },
+            {
+                "useName": "室友",
                 "usePhone": null,
                 "idCard": null,
                 "plateNumber": null
