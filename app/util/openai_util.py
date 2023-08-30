@@ -10,10 +10,11 @@ def completion(messages: list[dict]) -> str:
     contents = []
     retry_count = 0
     max_retries = 2
+    api_key = get_openai_key()
     while True:
         try:
             response = ChatCompletion.create(
-                api_key=get_openai_key(),
+                api_key=api_key,
                 model="gpt-3.5-turbo",
                 messages=messages,
                 request_timeout=2,
@@ -37,7 +38,7 @@ def completion(messages: list[dict]) -> str:
                 )
             else:
                 logger.warning(
-                    "Failed to get completion response from OpenAI API. Retrying..."
+                    f"Failed to get completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
 
@@ -50,12 +51,8 @@ class Conversation:
         self.messages.append({"role": "system", "content": self.prompt})
 
     def ask(self, question):
-        try:
-            self.messages.append({"role": "user", "content": question})
-            message = completion(self.messages)
-        except Exception as e:
-            print(e)
-            return e
+        self.messages.append({"role": "user", "content": question})
+        message = completion(self.messages)
 
         self.messages.append({"role": "assistant", "content": message})
 
