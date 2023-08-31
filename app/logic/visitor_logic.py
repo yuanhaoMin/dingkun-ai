@@ -9,16 +9,15 @@ from collections import OrderedDict
 from typing import List
 import logging
 
+from app.util.time_utll import get_current_date_and_day
+
 SESSION_STORE = OrderedDict()
 MAX_ATTEMPTS = 3
 MAX_SESSION_COUNT = 1000
-current_date = datetime.now().strftime("%Y-%m-%d")
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-today = datetime.today().date()
-day_of_week = days[today.weekday()]
 
 
 def determine_registration_function_call(text: str) -> str:
+    current_date, day_of_week = get_current_date_and_day()
     replacements = {"current_date:": current_date,
                     "day_of_week:": day_of_week}
     prompt = create_prompt_from_template_file(
@@ -38,43 +37,6 @@ def determine_companion_registration_function_call(text: str) -> str:
     messages.extend(HistoryBasedTrainingManager.get_visitor_companion_register_messages())
     messages.append({"role": "user", "content": text})
     return completion(messages)
-
-
-# logging.basicConfig(level=logging.INFO)
-# TEMPLATE = {
-#     "appointmentTime": None,
-#     "companyName": None,
-#     "contactOrg": None,
-#     "contactPerson": None,
-#     "idCard": None,
-#     "plateNumber": None,
-#     "remark": None,
-#     "useName": None,
-#     "usePhone": None,
-#     "visitingReason": None
-# }
-#
-#
-# def update_session_data(session_id, new_data):
-#     logging.info(f"Updating session {session_id} with data: {new_data}")
-#
-#     old_data = SESSION_STORE.get(session_id, TEMPLATE.copy())
-#     logging.info(f"Old data: {old_data}")
-#
-#     for key, value in new_data.items():
-#         if value is not None:
-#             old_data[key] = value
-#
-#     old_data["timestamp"] = datetime.now()
-#
-#     SESSION_STORE[session_id] = old_data
-#
-#     if not old_data.get("appointmentTime"):
-#         old_data["appointmentTime"] = datetime.now().strftime("%Y-%m-%d")
-#
-#     logging.info(f"Final updated data: {old_data}")
-#
-#     return old_data
 
 
 def prune_sessions():
@@ -100,6 +62,7 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
     if not department_names:
         department_names = []
     departments_str = ",".join(department_names)
+    current_date, day_of_week = get_current_date_and_day()
     replacements = {"current_date:": current_date,
                     "day_of_week:": day_of_week,
                     "departments:": departments_str
@@ -112,7 +75,8 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
         conversation = Conversation(prompt, num_of_round=5)
         SESSION_STORE[sessionId] = {
             "conversation": conversation,
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
+            "previous_response": None
         }
     else:
         conversation = SESSION_STORE[sessionId]["conversation"]
@@ -120,7 +84,7 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
 
     attempts = 0
     while attempts < MAX_ATTEMPTS:
-        response = conversation.ask(text+'''(Ignore the irrelevant remarks made by the user, only return the specified 
+        response = conversation.ask(text + '''(Ignore the irrelevant remarks made by the user, only return the specified 
         JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
         JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
         JSON data unless the user explicitly requests a change in a specific item.
@@ -129,9 +93,16 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
         remove_expired_sessions()
         prune_sessions()
         try:
-            # 尝试修复和解析 JSON
             fixed_response = fix_and_parse_json(response)
-            return fixed_response  # 如果成功，直接返回修复后的 JSON
+
+            # 合并之前的数据，如果有的话
+            if SESSION_STORE[sessionId].get("previous_response"):
+                fixed_response = merge_previous_data(SESSION_STORE[sessionId]["previous_response"], fixed_response)
+
+            # 保存这次的响应作为下一次的"之前的响应"
+            SESSION_STORE[sessionId]["previous_response"] = fixed_response
+
+            return fixed_response
         except json.JSONDecodeError as e:
             logging.error(f"Failed to parse JSON. AI's response was: {response}")
             # 如果失败，捕获异常并告知 AI
@@ -141,3 +112,18 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
 
     # 超过最大尝试次数，返回 None
     return {}
+
+
+def merge_previous_data(previous: list, current: list) -> list:
+    for i in range(len(previous)):
+        prev_dict = previous[i]
+        curr_dict = current[i]
+        for key in prev_dict.keys():
+            if key not in curr_dict:
+                continue
+            if isinstance(prev_dict[key], dict) and isinstance(curr_dict[key], dict):
+                merge_previous_data([prev_dict[key]], [curr_dict[key]])  # 转为列表以复用这个函数
+            else:
+                if prev_dict[key] is not None and curr_dict[key] is None:
+                    curr_dict[key] = prev_dict[key]
+    return current

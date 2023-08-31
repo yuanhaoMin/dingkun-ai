@@ -150,31 +150,3 @@ def fix_and_parse_json(json_str: str) -> Union[str, Dict[Any, Any], list]:
     except json.JSONDecodeError as e:
         raise e
 
-
-# json_str = '''
-# {
-#     "appointmentTime": null,
-#     "companyName": "深圳电力公司",
-#     "contactOrg": null,
-#     "contactPerson": "张元",
-#     "idCard": null,
-#     "plateNumber": null,
-#     "remark": null,
-#     "useName": "小李",
-#     "usePhone": null,
-#     "visitingReason": null
-# },
-# {
-#     "visitorChildDTOList": [
-#         {
-#             "useName": null,
-#             "usePhone": null,
-#             "idCard": null,
-#             "plateNumber": null
-#         }
-#     ]
-# }
-# '''
-#
-# fixed_json = fix_and_parse_json(json_str)
-# print(fixed_json)

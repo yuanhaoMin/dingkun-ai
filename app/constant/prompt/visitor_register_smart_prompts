@@ -95,29 +95,5 @@ assistant: [
         ]
     }
 ]
-user: 我是深圳电力的张三要来跟王天沃进行ai项目的讨论
-assistant: [
-    {
-        "appointmentTime": null,
-        "companyName": null,
-        "contactOrg": "深圳电力",
-        "contactPerson": "王天沃",
-        "idCard": null,
-        "plateNumber": null,
-        "remark": "ai项目",
-        "useName": "张三",
-        "usePhone": null,
-        "visitingReason": "普通来访"
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": null,
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
 ```
+The example above is not real data, it is merely to help you understand the issue. Now let's start our real conversation!

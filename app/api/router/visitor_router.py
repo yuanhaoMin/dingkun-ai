@@ -14,51 +14,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# @router.post("/registration/function-call")
-# def determine_registration_function_call(request: DetermineFunctionCallRequestOld):
-#     department_names_list = request.departmentNames
-#     result_str = visitor_logic.determine_registration_function_call_old(request.text, department_names_list)
-#     try:
-#         result = json.loads(result_str)
-#     except json.JSONDecodeError:
-#         raise InvalidAIGeneratedJSONError(detail="Failed to parse JSON from function result.")
-#
-#     valid, errors = validate_json(result, visitor_register_schema_old)
-#     if not valid:
-#         raise InvalidAIGeneratedJSONError(detail=", ".join(errors))
-#
-#     session_id = request.sessionId
-#     logging.info(f"Received request with sessionId: {session_id}")
-#     logging.info(f"Initial data: {result}")
-#
-#     # 移除过期的 sessions
-#     remove_expired_sessions()
-#
-#     # 更新 session 数据
-#     updated_data = update_session_data(session_id, result)
-#     logging.info(f"Updated data after session update: {updated_data}")
-#     # 检查并移除多余的 sessions
-#     prune_sessions()
-#     result = {k: v for k, v in updated_data.items() if k != "timestamp"}
-#     return result
-#
-#
-# @router.post("/companion/registration/function-call")
-# def determine_companion_registration_function_call(request: DetermineFunctionCallRequestOld):
-#     result_str = visitor_logic.determine_companion_registration_function_call_old(request.text)
-#
-#     try:
-#         result = json.loads(result_str)
-#     except json.JSONDecodeError:
-#         raise InvalidAIGeneratedJSONError(detail="Failed to parse JSON from function result.")
-#
-#     valid, errors = validate_json(result, companion_register_schema_old)
-#     if not valid:
-#         raise InvalidAIGeneratedJSONError(detail=", ".join(errors))
-#
-#     return result
-
-
 @router.post("/smart-registration/function-call")
 def smart_determine_registration_function_call(request: DetermineFunctionCallRequestSmart):
     department_codes = {}
@@ -97,7 +52,6 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
         if contact_person and contact_org:
             relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org,
                                                                                              contact_person)
-
             if relationship == "受访部门存在，受访人存在":
                 entry['contactOrg'] = closest_department
                 entry['contactPerson'] = closest_person
@@ -105,13 +59,10 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
                 entry['id'] = person_ids.get(closest_person)
             elif relationship == "受访部门存在，受访人不存在":
                 entry['contactOrg'] = closest_department
-                # entry['contactPerson'] = None
                 entry['departmentCode'] = department_codes.get(closest_department)
                 entry['id'] = None
             elif relationship == "受访部门不存在，受访人存在":
-                # entry['contactOrg'] = None
                 entry['contactPerson'] = closest_person
-                entry['message'] = "受访部门不存在，受访人存在"
                 entry['departmentCode'] = None
                 entry['id'] = person_ids.get(closest_person)
             elif relationship == "受访部门存在，受访人不对应":
@@ -120,8 +71,6 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
                 entry['departmentCode'] = department_codes.get(closest_department)
                 entry['id'] = person_ids.get(closest_person)
             else:
-                # entry['contactOrg'] = None
-                # entry['contactPerson'] = None
                 entry['departmentCode'] = None
                 entry['id'] = None
 
