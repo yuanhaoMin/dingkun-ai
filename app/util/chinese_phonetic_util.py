@@ -1,4 +1,6 @@
 from xpinyin import Pinyin
+import random
+import string
 
 MAX_DISTANCE = 3
 
@@ -60,7 +62,11 @@ class PyEditDistance:
             node.value = value
         return root
 
-    def _search_within_distance(self, node, word, current_row, results):
+    def _search_within_distance_deprecated_(self, node, word, current_row, results):
+        """
+            This function is deprecated and not optimized.
+            Use _search_within_distance instead.
+        """
         columns = len(word) + 1
         if node.is_end_of_word and current_row[-1] <= MAX_DISTANCE:
             results.append(node.value)
@@ -75,6 +81,29 @@ class PyEditDistance:
                     replace_cost += 1
                 next_row.append(min(insert_cost, delete_cost, replace_cost))
             self._search_within_distance(child_node, word, next_row, results)
+
+    def _search_within_distance(self, node, word, current_row, results):
+        columns = len(word) + 1
+        if node.is_end_of_word:
+            distance = current_row[-1]
+            if distance <= MAX_DISTANCE:
+                results.append(node.value)
+
+        for letter, child_node in node.children.items():
+            next_row = [current_row[0] + 1]
+            exceed_max_distance = True
+            for col in range(1, columns):
+                insert_cost = current_row[col] + 1
+                delete_cost = next_row[col - 1] + 1
+                replace_cost = current_row[col - 1]
+                if word[col - 1] != letter:
+                    replace_cost += 1
+                min_cost = min(insert_cost, delete_cost, replace_cost)
+                next_row.append(min_cost)
+                if min_cost <= MAX_DISTANCE:
+                    exceed_max_distance = False
+            if not exceed_max_distance:
+                self._search_within_distance(child_node, word, next_row, results)
 
     def _match_with_trie(self, target, trie):
         target_pinyin = self.p.get_pinyin(target, '', tone_marks='numbers')
@@ -98,15 +127,69 @@ class PyEditDistance:
         closest_person, person_distance = self.closest_match(matched_persons, person_name)
 
         if closest_department and closest_person in self.data[closest_department]:
-            return "受访部门存在，受访人存在", closest_department, dep_distance, closest_person, person_distance
+            return f"受访部门{department_name}存在，受访人{person_name}存在", closest_department, dep_distance, closest_person, person_distance
         elif closest_department and closest_person:
             for department, persons in self.data.items():
                 if closest_person in persons:
-                    return "受访部门存在，受访人不对应", closest_department, dep_distance, closest_person, person_distance
-            return "受访部门存在，受访人不存在", closest_department, dep_distance, None, float('inf')
+                    return f"受访部门{department_name}存在，受访人{person_name}不对应", closest_department, dep_distance, closest_person, person_distance
+            return f"受访部门{department_name}存在，受访人{person_name}不存在", closest_department, dep_distance, None, float(
+                'inf')
         elif closest_department:
-            return "受访部门存在，受访人不存在", closest_department, dep_distance, None, float('inf')
+            return f"受访部门{department_name}存在，受访人{person_name}不存在", closest_department, dep_distance, None, float(
+                'inf')
         elif closest_person:
-            return "受访部门不存在，受访人存在", None, float('inf'), closest_person, person_distance
+            return f"受访部门{department_name}不存在，受访人{person_name}存在", None, float(
+                'inf'), closest_person, person_distance
         else:
-            return "受访部门不存在，受访人不存在", None, float('inf'), None, float('inf')
+            return f"受访部门{department_name}不存在，受访人{person_name}不存在", None, float('inf'), None, float('inf')
+
+
+if __name__ == '__main__':
+    data = {'领导层': ['李国军', '李瑛', '郑强', '周舒阳', '李浓新'],
+            '生产技术部': ['文继红', '邓丽娥', '赖世娣', '李爱红', '彭君婷', '郑泽斌', '刘传武', '陈钊', '候太华',
+                           '林建明', '杨洁', '张晓宁', '蔡佳娜', '黄志庭',
+                           '张烨', '梁柱艺', '莫水汉', '潘明优', '邱文强', '薛贵洪', '邹华', '郑强', '杨念', '钟杨林',
+                           '周俊光', '中控室'],
+            '实验室': ['文继红', '邓丽娥', '赖世娣', '李爱红', '彭君婷'], '工艺组': ['郑泽斌', '蔡佳娜', '周俊光'],
+            '设备组': ['刘传武', '陈钊', '候太华', '林建明', '杨洁', '张晓宁', '张烨'],
+            '运行班组': ['黄志庭', '梁柱艺', '莫水汉', '潘明优', '邱文强', '薛贵洪', '邹华', '杨念', '钟杨林',
+                         '中控室'],
+            '行政人事部': ['周舒阳', '赖斐', '刘诗媛', '周灵', '冯巧娜', '何雪求', '职安建测试人员'],
+            '职安健': ['周灵', '何雪求', '职安建测试人员'],
+            '财务部': ['李瑛', '瞿天琼', '林子清'],
+            '长期承包商': ['李鑫', '曾凡东', '桂文生', '周玉盛', '于淑云', '曾美容', '钟任华', '郝春吉', '张汉武',
+                           '余惠琴', '胡志爱'],
+            '昱霖物业': ['李鑫', '曾凡东', '桂文生', '周玉盛', '于淑云', '曾美容', '钟任华', '郝春吉', '张汉武',
+                         '余惠琴', '胡志爱'], '短期承包商': []}
+
+
+    def generate_random_name():
+        return ''.join(random.choice(string.ascii_letters) for _ in range(10))
+
+
+    new_departments = ['新部门1', '新部门2', '新部门3', '新部门4', '新部门5']
+
+    for dept in new_departments:
+        data[dept] = [generate_random_name() for _ in range(5000)]
+
+    pyed = PyEditDistance(data)
+
+    # 测试已存在于数据集的人名
+    result = pyed.get_relationship('领导层', '李果军')
+    print(f"状态: {result[0]}, 部门: {result[1]} (距离: {result[2]}), 人员: {result[3]} (距离: {result[4]})")
+
+    # 测试不存在于数据集但读音相近的人名
+    result = pyed.get_relationship('领导层', '张叶')
+    print(f"状态: {result[0]}, 部门: {result[1]} (距离: {result[2]}), 人员: {result[3]} (距离: {result[4]})")
+
+    # 测试不存在于数据集的人名
+    result = pyed.get_relationship('生产技术', '张三')
+    print(f"状态: {result[0]}, 部门: {result[1]} (距离: {result[2]}), 人员: {result[3]} (距离: {result[4]})")
+
+    # 测试读音相近的部门名
+    result = pyed.get_relationship('拆物部', '曾美容')
+    print(f"状态: {result[0]}, 部门: {result[1]} (距离: {result[2]}), 人员: {result[3]} (距离: {result[4]})")
+
+    # 测试不存在的部门
+    result = pyed.get_relationship('产品销售部', '张三')
+    print(f"状态: {result[0]}, 部门: {result[1]} (距离: {result[2]}), 人员: {result[3]} (距离: {result[4]})")

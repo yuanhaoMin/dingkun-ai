@@ -6,19 +6,17 @@ from datetime import datetime, timedelta
 from collections import OrderedDict
 from typing import List
 import logging
+from app.util.time_utll import get_current_date_and_day
 
 SESSION_STORE = OrderedDict()
 MAX_ATTEMPTS = 3
 MAX_SESSION_COUNT = 1000
-current_date = datetime.now().strftime("%Y-%m-%d")
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-today = datetime.today().date()
-day_of_week = days[today.weekday()]
 
 
 def determine_registration_function_call(sessionId: str, text: str, department_names: List[str]) -> str:
     if not department_names:
         department_names = []
+    current_date, day_of_week = get_current_date_and_day()
     departments_str = ",".join(department_names)
     replacements = {"current_date:": current_date,
                     "day_of_week:": day_of_week,

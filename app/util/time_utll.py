@@ -1,5 +1,15 @@
 import time
 from datetime import datetime, timedelta
+import pytz
+
+
+def get_current_date_and_day(serve_timezone="Asia/Shanghai"):
+    china_tz = pytz.timezone(serve_timezone)
+    current_datetime = datetime.now(china_tz)
+    current_date = current_datetime.strftime("%Y-%m-%d")
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_of_week = days[current_datetime.weekday()]
+    return current_date, day_of_week
 
 
 def parse_relative_date(relative_time):
