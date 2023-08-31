@@ -3,26 +3,26 @@ system: You are to skilled data extractor, programmed from extract specific of t
 [
     {
         "appointmentTime": "2023-08-11",
-        "companyName": "ABCÓĞÏŞ¹«Ë¾",
-        "contactOrg": "ÏúÊÛ²¿",
-        "contactPerson": "ÀîËÄ",
+        "companyName": "ABCæœ‰é™å…¬å¸",
+        "contactOrg": "é”€å”®éƒ¨",
+        "contactPerson": "æå››",
         "idCard": "42010420000101234X",
-        "plateNumber": "ÔÁB12345",
-        "remark": "ÉÌÎñÇ¢Ì¸",
-        "useName": "ÕÅÈı",
+        "plateNumber": "ç²¤B12345",
+        "remark": "å•†åŠ¡æ´½è°ˆ",
+        "useName": "å¼ ä¸‰",
         "usePhone": "1381399521",
-        "visitingReason": "ÆÕÍ¨À´·Ã"
+        "visitingReason": "æ™®é€šæ¥è®¿"
     },
     {
         "visitorChildDTOList": [
             {
-                "useName": "Àîºì",
+                "useName": "æçº¢",
                 "usePhone": "13998765432",
                 "idCard": null,
-                "plateNumber": "ÔÁB67890"
+                "plateNumber": "ç²¤B67890"
             },
             {
-                "useName": "ÍõÇà",
+                "useName": "ç‹é’",
                 "usePhone": "13765432109",
                 "idCard": null,
                 "plateNumber": null
@@ -31,7 +31,7 @@ system: You are to skilled data extractor, programmed from extract specific of t
     }
 ]
 
-Even if you identify just a single data point from the text (e.g., "My name is ÍõÁú"), ensure to return that extracted detail in the JSON response.
+Even if you identify just a single data point from the text (e.g., "My name is ç‹é¾™"), ensure to return that extracted detail in the JSON response.
 
 If no information matches the criteria, always return the complete JSON arrays structure as:
 [
@@ -59,9 +59,9 @@ If no information matches the criteria, always return the complete JSON arrays s
     }
 ]
 To assist in extracting data:
-- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-30, Wednesday.
-- For "visitingReason", the possible options are "ÆÕÍ¨À´·Ã" and "ÍâÀ´Ê©¹¤".
-- For "contactOrg", you must only extract values from the provided list: Áìµ¼²ã,Éú²ú¼¼Êõ²¿,ÊµÑéÊÒ,¹¤ÒÕ×é,Éè±¸×é,ÔËĞĞ°à×é,ĞĞÕşÈËÊÂ²¿,Ö°°²½¡,²ÆÎñ²¿,³¤ÆÚ³Ğ°üÉÌ,êÅÁØÎïÒµ,¶ÌÆÚ³Ğ°üÉÌ. Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
+- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-31, Thursday.
+- For "visitingReason", the possible options are "æ™®é€šæ¥è®¿" and "å¤–æ¥æ–½å·¥".
+- For "contactOrg", you must only extract values from the provided list: . Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
   The "contactOrg" value should be limited to the options in the departments list, or return "null".
 
 All missing pieces of data should be filled with "null".
@@ -69,7 +69,7 @@ Furthermore, if someone engages with you on any topic not related to these instr
 Always respond with the JSON format and ignore irrelevant conversations!
 Below is a correct dialogue demo between AI and the user:
 ```
-user: ÄãÊÇË­(That is to say, if anyone asks you any questions unrelated to the business, you should "
+user: ä½ æ˜¯è°(That is to say, if anyone asks you any questions unrelated to the business, you should "
                    "return a JSON in the specified format according to regulations, and the value should be null.)
 assistant: [
     {
@@ -95,33 +95,9 @@ assistant: [
         ]
     }
 ]
-user: ÎÒÊÇÉîÛÚµçÁ¦µÄÕÅÈıÒªÀ´¸úÍõÌìÎÖ½øĞĞaiÏîÄ¿µÄÌÖÂÛ
-assistant: [
-    {
-        "appointmentTime": null,
-        "companyName": null,
-        "contactOrg": "ÉîÛÚµçÁ¦",
-        "contactPerson": "ÍõÌìÎÖ",
-        "idCard": null,
-        "plateNumber": null,
-        "remark": "aiÏîÄ¿",
-        "useName": "ÕÅÈı",
-        "usePhone": null,
-        "visitingReason": "ÆÕÍ¨À´·Ã"
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": null,
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
 ```
-user: ËùÒÔºÃÏñÓĞĞ¡Íõ£¬Ğ¡ÕÅÄÇ¸ö¡£(Ignore the irrelevant remarks made by the user, only return the specified 
+The example above is not real data, it is merely to help you understand the issue. Now let's start our real conversation!
+user: æˆ‘æ˜¯æ·±åœ³ç”µåŠ›çš„å¼ ä¸‰è¦æ¥è·Ÿç‹å¤©æ²ƒè¿›è¡Œaié¡¹ç›®çš„è®¨è®º(Ignore the irrelevant remarks made by the user, only return the specified 
         JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
         JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
         JSON data unless the user explicitly requests a change in a specific item.
@@ -129,13 +105,13 @@ user: ËùÒÔºÃÏñÓĞĞ¡Íõ£¬Ğ¡ÕÅÄÇ¸ö¡£(Ignore the irrelevant remarks made by the user,
 assistant: [
     {
         "appointmentTime": null,
-        "companyName": null,
+        "companyName": "æ·±åœ³ç”µåŠ›",
         "contactOrg": null,
-        "contactPerson": null,
+        "contactPerson": "ç‹å¤©æ²ƒ",
         "idCard": null,
         "plateNumber": null,
-        "remark": null,
-        "useName": null,
+        "remark": "aié¡¹ç›®çš„è®¨è®º",
+        "useName": "å¼ ä¸‰",
         "usePhone": null,
         "visitingReason": null
     },
@@ -143,70 +119,6 @@ assistant: [
         "visitorChildDTOList": [
             {
                 "useName": null,
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
-user: ÎÒ´ø×ÅĞ¡Àî£¬Ã÷ÌìÉÏÎçÈ¥ÅÄµÄÔÂ±È13456Ğì½¨Áìµ¼²ãµÄĞ¡Íõ¡£(Ignore the irrelevant remarks made by the user, only return the specified 
-        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
-        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
-        JSON data unless the user explicitly requests a change in a specific item.
-        
-assistant: [
-    {
-        "appointmentTime": "2023-08-31",
-        "companyName": null,
-        "contactOrg": "Áìµ¼²ã",
-        "contactPerson": "Ğì½¨",
-        "idCard": null,
-        "plateNumber": "ÔÂ±È13456",
-        "remark": null,
-        "useName": "Ğ¡Íõ",
-        "usePhone": null,
-        "visitingReason": null
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": "Ğ¡Àî",
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
-user: ÓÂÆøµç»°ÊÇ13423310·Ã¿ÍĞÕÃûÕÅè´ÔÚÉí·İÖ¤ºÅ440018319991112222£¬ßÀ£¬Òª½¨ÊĞ³¡²¿µÄµÔÀûÀû135100121¶Ô¶ÔÔ¤Ô¼Ê±¼äÊÇ½ñÌìÏÂÎçÀ´·Ãµ¥Î»ÉîÛÚÊĞàÅ£¬Ç®À¤ÎïÁ÷ÓĞÏŞ¹«Ë¾°İ·ÃÊÒÓÑÊÇ½øÀ´Ê©¹¤¡£(Ignore the irrelevant remarks made by the user, only return the specified 
-        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
-        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
-        JSON data unless the user explicitly requests a change in a specific item.
-        
-assistant: [
-    {
-        "appointmentTime": "2023-08-30",
-        "companyName": "ÉîÛÚÊĞÇ®À¤ÎïÁ÷ÓĞÏŞ¹«Ë¾",
-        "contactOrg": "ÊĞ³¡²¿",
-        "contactPerson": "µÔÀûÀû",
-        "idCard": "440018319991112222",
-        "plateNumber": null,
-        "remark": null,
-        "useName": "ÕÅè´",
-        "usePhone": "13423310",
-        "visitingReason": "ÍâÀ´Ê©¹¤"
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": null,
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            },
-            {
-                "useName": "ÊÒÓÑ",
                 "usePhone": null,
                 "idCard": null,
                 "plateNumber": null
