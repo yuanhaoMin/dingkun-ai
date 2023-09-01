@@ -89,7 +89,8 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
         JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
         JSON data unless the user explicitly requests a change in a specific item.
         ''')
-        conversation.save_messages_to_file()
+        # Only for debugging purpose
+        # conversation.save_messages_to_file()
         remove_expired_sessions()
         prune_sessions()
         try:
