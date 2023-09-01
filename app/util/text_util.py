@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List, Dict
 
 
 def create_prompt_from_template_file(filename: str, replacements: dict) -> str:
@@ -26,3 +27,11 @@ def create_prompt_from_template_file(filename: str, replacements: dict) -> str:
         prompt_template = re.sub(pattern, value, prompt_template)
 
     return prompt_template
+
+
+def replace_multiple_words(text: str, replacement_rules: List[Dict[str, str]]) -> str:
+    for rule in replacement_rules:
+        for word, replacement in rule.items():
+            if word in text:
+                text = text.replace(word, replacement)
+    return text

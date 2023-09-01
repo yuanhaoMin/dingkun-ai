@@ -1,9 +1,12 @@
 import logging
 import json
 from fastapi import APIRouter
+
+from app.constant.replacement.text_constant import visitor_register_replacement_rules
 from app.logic import visitor_logic
 from app.model.schema.visitor_schema import DetermineFunctionCallRequestSmart
-from app.util.chinese_phonetic_util import PyEditDistance
+from app.util.chinese_phonetic_util import PyEditDistance, closest_value_match
+from app.util.text_util import replace_multiple_words
 
 router = APIRouter(
     prefix="/visitor",
@@ -16,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/smart-registration/function-call")
 def smart_determine_registration_function_call(request: DetermineFunctionCallRequestSmart):
+    replaced_text = replace_multiple_words(request.text, visitor_register_replacement_rules)
     department_codes = {}
     person_ids = {}
     department_names = []
@@ -39,17 +43,18 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
 
     result_str = visitor_logic.smart_determine_companion_registration_function_call(
         request.sessionId,
-        request.text,
+        replaced_text,
         department_names
     )
-
+    check_and_update_visiting_reason(result_str)
     pyedit = PyEditDistance(department_persons_dict)
 
     for entry in result_str:
-        contact_person = entry.get('contactPerson')
-        contact_org = entry.get('contactOrg')
+        contact_person = entry.get('contactPerson') or ""
+        contact_org = entry.get('contactOrg') or ""
 
-        if contact_person and contact_org:
+        # 只有当两者中至少有一个不是空字符串时，才执行以下代码
+        if contact_person or contact_org:
             relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org,
                                                                                              contact_person)
             if relationship == "受访部门存在，受访人存在":
@@ -67,6 +72,11 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
                 entry['id'] = person_ids.get(closest_person)
             elif relationship == "受访部门存在，受访人不对应":
                 entry['contactOrg'] = closest_department
+                entry['contactPerson'] = closest_person
+                entry['departmentCode'] = department_codes.get(closest_department)
+                entry['id'] = person_ids.get(closest_person)
+            elif relationship == "受访部门自动关联，受访人存在":
+                entry['contactOrg'] = closest_department  # 这里使用自动关联的 closest_department
                 entry['contactPerson'] = closest_person
                 entry['departmentCode'] = department_codes.get(closest_department)
                 entry['id'] = person_ids.get(closest_person)
@@ -90,3 +100,11 @@ def handle_department(department, department_names, department_persons_dict):
     person_names = [person["personName"] for person in persons]
     if person_names:
         department_persons_dict[department_name] = person_names
+
+
+def check_and_update_visiting_reason(response: list) -> list:
+    reason = response[0].get("visitingReason", "")
+    closest_match = closest_value_match([{"visitingReason": reason}], "visitingReason", "外来施工", "普通来访")
+    if closest_match:
+        response[0]["visitingReason"] = closest_match
+    return response

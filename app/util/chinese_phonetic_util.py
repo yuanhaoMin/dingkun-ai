@@ -1,3 +1,5 @@
+import json
+
 from xpinyin import Pinyin
 
 MAX_DISTANCE = 3
@@ -107,8 +109,76 @@ class PyEditDistance:
         elif closest_department:
             return "受访部门存在，受访人不存在", closest_department, dep_distance, None, float('inf')
         elif closest_person:
+            # 如果受访人存在但受访部门不存在，尝试找到受访人所在的部门
+            for department, persons in self.data.items():
+                if closest_person in persons:
+                    return "受访部门自动关联，受访人存在", closest_department, float(
+                        'inf'), closest_person, person_distance
             return "受访部门不存在，受访人存在", None, float('inf'), closest_person, person_distance
         else:
             return "受访部门不存在，受访人不存在", None, float('inf'), None, float('inf')
 
+
+def get_edit_distance(s, t, p: Pinyin):
+    s = p.get_pinyin(s, ',', tone_marks='numbers')
+    t = p.get_pinyin(t, ',', tone_marks='numbers')
+    n = len(s)
+    m = len(t)
+    if n == 0:
+        return m
+    if m == 0:
+        return n
+
+    d = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        d[i][0] = i
+    for j in range(m + 1):
+        d[0][j] = j
+
+    for i in range(1, n + 1):
+        s_i = s[i - 1]
+        for j in range(1, m + 1):
+            t_j = t[j - 1]
+            cost = 0 if s_i == t_j else 1
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+
+    return d[n][m]
+
+
+def closest_value_match(json_str_or_dict, check_key, str1, str2, max_distance=10):
+    p = Pinyin()
+
+    # 如果输入是字符串，尝试解析为 Python 对象（字典）
+    if isinstance(json_str_or_dict, str):
+        try:
+            data = json.loads(json_str_or_dict)
+        except json.JSONDecodeError:
+            return "Invalid JSON string"
+    else:
+        data = json_str_or_dict
+
+    # 如果 data 是字典而不是列表，则将其转换为列表
+    if isinstance(data, dict):
+        data = [data]
+
+    # 如果 data 不是列表或者是空列表，返回 None
+    if not isinstance(data, list) or not data:
+        return None
+
+    # 获取用于比较的值
+    check_value = data[0].get(check_key, "")
+    if not check_value:
+        return None
+
+    dist1 = get_edit_distance(check_value, str1, p)
+    dist2 = get_edit_distance(check_value, str2, p)
+
+    # 根据编辑距离返回最接近的字符串
+    if dist1 > max_distance and dist2 > max_distance:
+        return check_value
+
+    if dist1 <= dist2 and dist1 <= max_distance:
+        return str1
+    elif dist2 < dist1 and dist2 <= max_distance:
+        return str2
 

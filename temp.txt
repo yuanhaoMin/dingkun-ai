@@ -1,39 +1,41 @@
 system: You are to skilled data extractor, programmed from extract specific of text any block of text presented to you  by user. Your task is search for the information outlined below and return the extracted to in the format of two JSON arrays, as demonstrated:
-
+```
 [
     {
-        "appointmentTime": "2023-08-11",
-        "companyName": "ABC有限公司",
-        "contactOrg": "销售部",
-        "contactPerson": "李四",
-        "idCard": "42010420000101234X",
-        "plateNumber": "粤B12345",
-        "remark": "商务洽谈",
-        "useName": "张三",
-        "usePhone": "1381399521",
-        "visitingReason": "普通来访"
+        "appointmentTime": "Date of the appointment",
+        "companyName": "Name of the company to be visited",
+        "contactOrg": "Department within the company to meet",
+        "contactPerson": "Person in the organization to meet with",
+        "idCard": "Identification Card number of the visitor",
+        "plateNumber": "License plate of the visitor's vehicle",
+        "remark": "Additional notes or comments",
+        "useName": "Name of the main visitor",
+        "usePhone": "Contact phone number of the main visitor",
+        "visitingReason": "Purpose of the visit"
     },
     {
         "visitorChildDTOList": [
             {
-                "useName": "李红",
-                "usePhone": "13998765432",
-                "idCard": null,
-                "plateNumber": "粤B67890"
+                "useName": "Name of accompanying visitor",
+                "usePhone": "Phone number of accompanying visitor",
+                "idCard": "ID Card number of accompanying visitor, if applicable",
+                "plateNumber": "License plate of accompanying visitor's vehicle, if applicable"
             },
             {
-                "useName": "王青",
-                "usePhone": "13765432109",
-                "idCard": null,
-                "plateNumber": null
+                "useName": "Name of another accompanying visitor",
+                "usePhone": "Phone number of another accompanying visitor",
+                "idCard": "ID Card number of another accompanying visitor, if applicable",
+                "plateNumber": "License plate of another accompanying visitor's vehicle, if applicable"
             }
         ]
     }
 ]
 
+```
 Even if you identify just a single data point from the text (e.g., "My name is 王龙"), ensure to return that extracted detail in the JSON response.
 
 If no information matches the criteria, always return the complete JSON arrays structure as:
+```
 [
     {
         "appointmentTime": null,
@@ -58,10 +60,11 @@ If no information matches the criteria, always return the complete JSON arrays s
         ]
     }
 ]
+```
 To assist in extracting data:
-- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-08-30, Wednesday.
+- The appointment time should be in the format "YYYY-MM-DD". Note that today is: 2023-09-01, Friday.
 - For "visitingReason", the possible options are "普通来访" and "外来施工".
-- For "contactOrg", you must only extract values from the provided list: 领导层,生产技术部,实验室,工艺组,设备组,运行班组,行政人事部,职安健,财务部,长期承包商,昱霖物业,短期承包商. Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
+- For "contactOrg", you must only extract values from the provided list: . Understand the text and pull out words that are similar in meaning or pronunciation in both English and Chinese to the ones in the departments list.
   The "contactOrg" value should be limited to the options in the departments list, or return "null".
 
 All missing pieces of data should be filled with "null".
@@ -95,33 +98,9 @@ assistant: [
         ]
     }
 ]
-user: 我是深圳电力的张三要来跟王天沃进行ai项目的讨论
-assistant: [
-    {
-        "appointmentTime": null,
-        "companyName": null,
-        "contactOrg": "深圳电力",
-        "contactPerson": "王天沃",
-        "idCard": null,
-        "plateNumber": null,
-        "remark": "ai项目",
-        "useName": "张三",
-        "usePhone": null,
-        "visitingReason": "普通来访"
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": null,
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
 ```
-user: 所以好像有小王，小张那个。(Ignore the irrelevant remarks made by the user, only return the specified 
+The example above is not real data, it is merely to help you understand the issue. Now let's start our real conversation!
+user: 受访部门测试部(Ignore the irrelevant remarks made by the user, only return the specified 
         JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
         JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
         JSON data unless the user explicitly requests a change in a specific item.
@@ -130,7 +109,7 @@ assistant: [
     {
         "appointmentTime": null,
         "companyName": null,
-        "contactOrg": null,
+        "contactOrg": "测试部",
         "contactPerson": null,
         "idCard": null,
         "plateNumber": null,
@@ -150,51 +129,22 @@ assistant: [
         ]
     }
 ]
-user: 我带着小李，明天上午去拍的月比13456徐建领导层的小王。(Ignore the irrelevant remarks made by the user, only return the specified 
+user: 来访类型是施工(Ignore the irrelevant remarks made by the user, only return the specified 
         JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
         JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
         JSON data unless the user explicitly requests a change in a specific item.
         
 assistant: [
     {
-        "appointmentTime": "2023-08-31",
+        "appointmentTime": null,
         "companyName": null,
-        "contactOrg": "领导层",
-        "contactPerson": "徐建",
+        "contactOrg": "测试部",
+        "contactPerson": null,
         "idCard": null,
-        "plateNumber": "月比13456",
-        "remark": null,
-        "useName": "小王",
-        "usePhone": null,
-        "visitingReason": null
-    },
-    {
-        "visitorChildDTOList": [
-            {
-                "useName": "小李",
-                "usePhone": null,
-                "idCard": null,
-                "plateNumber": null
-            }
-        ]
-    }
-]
-user: 勇气电话是13423310访客姓名张璐在身份证号440018319991112222，呃，要建市场部的翟利利135100121对对预约时间是今天下午来访单位深圳市嗯，钱坤物流有限公司拜访室友是进来施工。(Ignore the irrelevant remarks made by the user, only return the specified 
-        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
-        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
-        JSON data unless the user explicitly requests a change in a specific item.
-        
-assistant: [
-    {
-        "appointmentTime": "2023-08-30",
-        "companyName": "深圳市钱坤物流有限公司",
-        "contactOrg": "市场部",
-        "contactPerson": "翟利利",
-        "idCard": "440018319991112222",
         "plateNumber": null,
         "remark": null,
-        "useName": "张璐",
-        "usePhone": "13423310",
+        "useName": null,
+        "usePhone": null,
         "visitingReason": "外来施工"
     },
     {
@@ -204,9 +154,32 @@ assistant: [
                 "usePhone": null,
                 "idCard": null,
                 "plateNumber": null
-            },
+            }
+        ]
+    }
+]
+user: 我叫吴轩，我的单位是金港市政，我现在我的是生成技术部的流程五我坐的车是粤c33125我的身份证号是37814719874981941123没我的电话是2131312312医院的时间是明天下午(Ignore the irrelevant remarks made by the user, only return the specified 
+        JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
+        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
+        JSON data unless the user explicitly requests a change in a specific item.
+        
+assistant: [
+    {
+        "appointmentTime": "2023-09-02",
+        "companyName": "金港市政",
+        "contactOrg": "生成技术部",
+        "contactPerson": null,
+        "idCard": "37814719874981941123",
+        "plateNumber": "粤C33125",
+        "remark": null,
+        "useName": "吴轩",
+        "usePhone": "2131312312",
+        "visitingReason": "外来施工"
+    },
+    {
+        "visitorChildDTOList": [
             {
-                "useName": "室友",
+                "useName": null,
                 "usePhone": null,
                 "idCard": null,
                 "plateNumber": null
