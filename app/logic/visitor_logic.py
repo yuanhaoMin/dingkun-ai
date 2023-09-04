@@ -39,12 +39,19 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
     attempts = 0
     while attempts < MAX_ATTEMPTS:
         response = conversation.ask(text)
-        # conversation.save_messages_to_file()
+        conversation.save_messages_to_file()
         remove_expired_sessions()
         prune_sessions()
         try:
             # 尝试修复和解析 JSON
             fixed_response = fix_and_parse_json(response)
+            # 合并之前的数据，如果有的话
+            if SESSION_STORE[sessionId].get("previous_response"):
+                fixed_response = merge_previous_data(SESSION_STORE[sessionId]["previous_response"], fixed_response)
+
+            # 保存这次的响应作为下一次的"之前的响应"
+            SESSION_STORE[sessionId]["previous_response"] = fixed_response
+
             return fixed_response  # 如果成功，直接返回修复后的 JSON
         except json.JSONDecodeError as e:
             logging.error(f"Failed to parse JSON. AI's response was: {response}")
@@ -74,3 +81,24 @@ def remove_expired_sessions():
 
     for key in expired_keys:
         SESSION_STORE.pop(key)
+
+
+def merge_previous_data(previous: list, current: list) -> list:
+    for i in range(len(previous)):
+        prev_dict = previous[i]
+        curr_dict = current[i]
+        for key in prev_dict.keys():
+            if key not in curr_dict:
+                continue
+            if isinstance(prev_dict[key], dict) and isinstance(curr_dict[key], dict):
+                merge_previous_data([prev_dict[key]], [curr_dict[key]])  # 转为列表以复用这个函数
+            elif isinstance(prev_dict[key], list) and isinstance(curr_dict[key], list):  # 新增的列表合并逻辑
+                for j in range(min(len(prev_dict[key]), len(curr_dict[key]))):
+                    if prev_dict[key][j] != "null" and curr_dict[key][j] == "null":
+                        curr_dict[key][j] = prev_dict[key][j]
+            else:
+                # 修改这里的检查逻辑，考虑到 "null"
+                if (prev_dict[key] is not None and prev_dict[key] != "null") and (curr_dict[key] is None or curr_dict[key] == "null"):
+                    curr_dict[key] = prev_dict[key]
+    return current
+

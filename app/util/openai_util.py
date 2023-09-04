@@ -2,6 +2,12 @@ import logging
 from app.config.api_config import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion
+import json
+import openai
+import requests
+
+# from tenacity import retry, wait_random_exponential, stop_after_attempt
+# from termcolor import colored
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +65,34 @@ class Conversation:
 
         self.messages.append({"role": "assistant", "content": message})
 
-        if len(self.messages) > self.num_of_round*2 + 1:
+        if len(self.messages) > self.num_of_round * 2 + 1:
             del self.messages[1:3]
         return message
 
     def save_messages_to_file(self, filename="temp.txt"):
-        with open(filename, 'w') as file:
+        with open(filename, 'w', encoding='utf-8') as file:
             for message in self.messages:
                 file.write(f"{message['role']}: {message['content']}\n")
+
+
+def chat_completion_request(messages, functions=None, function_call=None, model="gpt-3.5-turbo-0613"):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + openai.api_key,
+    }
+    json_data = {"model": model, "messages": messages}
+    if functions is not None:
+        json_data.update({"functions": functions})
+    if function_call is not None:
+        json_data.update({"function_call": function_call})
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=json_data,
+        )
+        return response
+    except Exception as e:
+        print("Unable to generate ChatCompletion response")
+        print(f"Exception: {e}")
+        return e

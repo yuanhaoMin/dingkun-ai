@@ -43,7 +43,12 @@ def determine_registration_function_call(request: DetermineFunctionCallRequestSm
         department_names
     )
 
-    return result_str
+    final_result = {
+        'sessionId': request.sessionId,
+        'data': result_str
+    }
+
+    return final_result
 
 
 def handle_department(department, department_names, department_persons_dict):
