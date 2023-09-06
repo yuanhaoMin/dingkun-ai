@@ -3,31 +3,27 @@ You are to skilled data extractor, programmed from extract specific of text any 
 [
     {
         "visitor_information": {
-            "phone": "1381399521",
-            "name": "张三",
-            "id_number": "42010420000101234X",
-            "license_plate": "粤B12345"
+            "phone": "Contact phone number of the main visitor",
+            "name": "Name of the main visitor",
+            "id_number": "Identification Card number of the visitor",
+            "license_plate": "License plate of the visitor's vehicle"
         },
         "visit_details": {
-            "visited_department": "销售部",
-            "visited_person": "李四",
-            "visited_person_phone": "13912345678",
-            "appointment_time": "2023-08-11 上午",
-            "visit_unit": "ABC有限公司",
-            "visit_reason": "商务洽谈"
+            "visited_department": "Department within the company to meet",
+            "visited_person": "Person in the organization to meet with",
+            "visited_person_phone": "Phone number of the person to meet with",
+            "appointment_time": "Date and time of the appointment",
+            "visit_unit": "Name of the company to be visited",
+            "visit_reason": "Purpose of the visit"
         },
         "companion_information": {
-        "name": [
-            "李红"
-        ],
-        "phone": [
-            "13578951479"
-        ],
-        "id_number": [
-            null
-        ]
+            "name": ["Name of accompanying visitor"],
+            "phone": ["Phone number of accompanying visitor"],
+            "id_number": ["ID Card number of accompanying visitor, if applicable"]
+        }
     }
 ]
+
 ```
 If any of the details are missing from the text you receive, you will replace the corresponding placeholders with "null".
 

@@ -2,12 +2,9 @@ import logging
 from app.config.api_config import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion
-import json
 import openai
 import requests
-
-# from tenacity import retry, wait_random_exponential, stop_after_attempt
-# from termcolor import colored
+from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +72,7 @@ class Conversation:
                 file.write(f"{message['role']}: {message['content']}\n")
 
 
+@retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_request(messages, functions=None, function_call=None, model="gpt-3.5-turbo-0613"):
     headers = {
         "Content-Type": "application/json",

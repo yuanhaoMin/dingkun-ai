@@ -20,6 +20,7 @@ def determine_registration_function_call(request: DetermineFunctionCallRequestSm
     person_ids = {}
     department_names = []
     department_persons_dict = {}
+    ai_message = ""
     if request.departmentsJson is not None:
         try:
             # 解析 departmentsJson
@@ -44,8 +45,9 @@ def determine_registration_function_call(request: DetermineFunctionCallRequestSm
     )
 
     final_result = {
-        'sessionId': request.sessionId,
-        'data': result_str
+        'session_id': request.sessionId,
+        'data': result_str,
+        'ai_message': ai_message
     }
 
     return final_result

@@ -5,7 +5,10 @@ from app.util.execution_util import run_code_to_get_svg
 from app.util.sql_util import get_db, execute_sql
 from datetime import datetime
 import json
-
+from app.knowledge.api_json import functions
+from app.util.openai_util import chat_completion_request, completion
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from app.util.time_utll import timeit
 
 current_date = datetime.now().strftime("%Y-%m-%d")
@@ -90,3 +93,63 @@ def execute_sql_query(sql_query: str) -> list:
         return results
     finally:
         db.close()
+
+
+
+def get_chart_and_function(user_message, chart_json):
+    prompt = f"""
+    Based on the user's request and using the provided chart dictionary:
+    ```
+    {chart_json}
+    ```
+    Identify the most appropriate chart
+
+    ## FORMAT:
+    {{
+    "chart_name": "<String>",
+    "dataPres": [
+          {{
+            "minQty": "<Int>",
+            "maxQty": "<Int>",
+            "fieldConditions": ["<String>", "<String>"...]
+          }},
+          ...
+        ]
+    }}
+    """
+
+    # 创建第一次交互的消息列表
+    messages = []
+    messages.append({"role": "system",
+                     "content": "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous."})
+    messages.append({"role": "user", "content": user_message})
+
+    # 为第二次交互创建消息列表
+    str_ = 'Must follow the format and not reply to any other words!'
+    messages2 = []
+    messages2.append({"role": "system", "content": prompt})
+    messages2.append({"role": "user", "content": user_message + str_})
+
+    async def run_async(func, *args):
+        # 使用默认的线程池执行器异步运行函数
+        with ThreadPoolExecutor() as executor:
+            return await asyncio.get_event_loop().run_in_executor(executor, func, *args)
+
+    # 使用asyncio并发运行两个函数
+    loop = asyncio.get_event_loop()
+    chat_response, completion_response = loop.run_until_complete(
+        asyncio.gather(
+            run_async(chat_completion_request, messages, functions),
+            run_async(completion, messages2)
+        )
+    )
+
+    assistant_message = chat_response.json()["choices"][0]["message"]
+
+    # 将两次响应整合并返回
+    result = {
+        'function_call': assistant_message.get('function_call', {}),
+        'chart_info': completion_response
+    }
+
+    return result

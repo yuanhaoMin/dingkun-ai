@@ -38,7 +38,12 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
 
     attempts = 0
     while attempts < MAX_ATTEMPTS:
-        response = conversation.ask(text)
+        response = conversation.ask(text + '''(Only return the specified JSON array relevant to the context, even if 
+        user requests do not align with the pre-defined scenario. Even without accompanying personnel, return the 
+        complete array with both objects. Retain the previously entered JSON unless explicitly changed by the user. 
+        Ensure: 1. Proper bracket pairing: Each '{' matches with '}', and each '[' with ']'. 2. Correct comma 
+        placement: Ensure no trailing comma after the last element or key-value pair.) '''
+)
         conversation.save_messages_to_file()
         remove_expired_sessions()
         prune_sessions()
