@@ -1,7 +1,7 @@
 chart_json='''
 {
-  "line_chart": {
-    "name": "Line Chart",
+  "Line": {
+    "name": "Line",
     "alias": ["Lines"],
     "def": "A line chart uses lines with segments to show changes in data in a ordinal dimension.",
     "purpose": ["Comparison", "Trend", "Anomaly"],
@@ -28,8 +28,8 @@ chart_json='''
     "channel": ["Position", "Direction"],
     "recRate": "Recommended"
   },
-  "column_chart": {
-    "name": "Column Chart",
+  "Column": {
+    "name": "Column",
     "alias": ["Columns"],
     "def": "A column chart uses series of columns to display the value of the dimension. The horizontal axis shows the classification dimension and the vertical axis shows the corresponding value.",
     "purpose": ["Comparison", "Distribution", "Rank"],
@@ -51,8 +51,8 @@ chart_json='''
     "channel": ["Position", "Color"],
     "recRate": "Recommended"
   },
-  "bar_chart": {
-    "name": "Bar Chart",
+  "Bar": {
+    "name": "Bar",
     "alias": ["Bars"],
     "def": "A bar chart uses series of bars to display the value of the dimension. The vertical axis shows the classification dimension and the horizontal axis shows the corresponding value.",
     "purpose": ["Comparison", "Distribution", "Rank"],
@@ -74,8 +74,8 @@ chart_json='''
     "channel": ["Position", "Color"],
     "recRate": "Recommended"
   },
-  "pie_chart": {
-    "name": "Pie Chart",
+  "Pie": {
+    "name": "Pie",
     "alias": ["Circle Chart", "Pie"],
     "def": "A pie chart is a chart that the classification and proportion of data are represented by the color and arc length (angle, area) of the sector.",
     "purpose": ["Comparison", "Composition", "Proportion"],
@@ -97,8 +97,8 @@ chart_json='''
     "channel": ["Angle", "Area", "Color"],
     "recRate": "Use with Caution"
   },
-  "area_chart": {
-    "name": "Area Chart",
+  "Area": {
+    "name": "Area",
     "alias": [],
     "def": "An area chart uses series of line segments with overlapped areas to show the change in data in a ordinal dimension.",
     "purpose": ["Comparison", "Trend", "Anomaly"],
@@ -125,8 +125,8 @@ chart_json='''
     "channel": ["Color", "Position"],
     "recRate": "Recommended"
   },
-  "scatter_plot": {
-    "name": "Scatter Plot",
+  "Scatter": {
+    "name": "Scatter",
     "alias": ["Scatter Chart", "Scatterplot"],
     "def": "A scatter plot is a type of plot or mathematical diagram using Cartesian coordinates to display values for typically two variables for series of data.",
     "purpose": ["Comparison", "Distribution", "Anomaly"],

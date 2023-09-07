@@ -28,3 +28,45 @@ def generate_data_report(request_text: UserInputText):
         )
 
     return DataReportResponse(data=report["data"], status_code=report["status_code"])
+
+
+@router.post("/generate-viz-data")
+def generate_data(request_text: UserInputText):
+    if request_text.text == "1":
+        config = {
+            "title": {
+                "visible": True,
+                "text": "单折线图"
+            },
+            "description": {
+                "text": "一个简单的单折线图"
+            },
+            "legend": {
+                "flipPage": False
+            },
+            "xAxis": {
+                "title": {
+                    "visible": True,
+                    "text": "这是x轴"
+                }
+            },
+            "yAxis": {
+                "title": {
+                    "visible": True,
+                    "text": "这是y轴"
+                }
+            },
+            "padding": "auto",
+            "forceFit": True,
+            "xField": "Date",
+            "yField": "scales",
+            "color": [
+                "#CFCFE2"
+            ]
+        }
+        return {
+            "config": config,
+            "url_data": "https://gw.alipayobjects.com/os/bmw-prod/1d565782-dde4-4bb6-8946-ea6a38ccf184.json"
+
+        }
+    return {}
