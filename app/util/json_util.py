@@ -184,6 +184,3 @@ json_str = '''
     }
 ]
 '''
-#
-fixed_json = fix_and_parse_json(json_str)
-print(fixed_json)

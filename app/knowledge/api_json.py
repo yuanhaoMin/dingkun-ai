@@ -31,10 +31,17 @@ functions = [
     },
     {
         "name": "patrolTrend",
-        "description": "Query the inspection trend for the current month.",
+        "description": "Query the inspection trend for the recent x months.",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {
+                "months": {
+                    "type": "integer",
+                    "description": "Number of months.",
+                    "default": 1
+                }
+            },
+            "required": ["months"]
         }
     }
 ]

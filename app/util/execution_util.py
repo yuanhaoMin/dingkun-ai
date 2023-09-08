@@ -1,4 +1,6 @@
 import ast
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 from app.util.time_utll import timeit
 
@@ -35,3 +37,13 @@ def run_code_to_get_svg(code: str, query_result: list) -> str:
         return svg_data
     except Exception as e:
         raise Exception(f"Execution error: {str(e)}")
+
+
+async def run_async_tasks(tasks):
+    async def run_async(func, *args):
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor() as executor:
+            return await loop.run_in_executor(executor, func, *args)
+
+    return await asyncio.gather(*[run_async(task[0], *task[1]) for task in tasks])
+

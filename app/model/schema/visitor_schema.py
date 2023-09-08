@@ -1,16 +1,6 @@
-from pydantic import BaseModel
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
-
-# {
-#   "sessionId": "abc123",
-#   "text": "Some text here",
-#   "departments": [
-#     {"id": 1, "name": "HR"},
-#     {"id": 2, "name": "Engineering"}
-#   ]
-# }
 
 class Department(BaseModel):
     id: int

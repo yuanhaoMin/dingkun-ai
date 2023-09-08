@@ -1,8 +1,11 @@
 import json
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from app.api.error.report_errors import InvalidSVGGeneratedError
+from app.api.function.function_call import execute_function_from_json
+from app.knowledge.chart_json import chart_json
 from app.logic import data_report_logic
+from app.logic.data_report_logic import get_chart_and_function
 from app.model.schema.report_schema import UserInputText
 
 router = APIRouter(
@@ -31,42 +34,22 @@ def generate_data_report(request_text: UserInputText):
 
 
 @router.post("/generate-viz-data")
-def generate_data(request_text: UserInputText):
-    if request_text.text == "1":
-        config = {
-            "title": {
-                "visible": True,
-                "text": "单折线图"
-            },
-            "description": {
-                "text": "一个简单的单折线图"
-            },
-            "legend": {
-                "flipPage": False
-            },
-            "xAxis": {
-                "title": {
-                    "visible": True,
-                    "text": "这是x轴"
-                }
-            },
-            "yAxis": {
-                "title": {
-                    "visible": True,
-                    "text": "这是y轴"
-                }
-            },
-            "padding": "auto",
-            "forceFit": True,
-            "xField": "Date",
-            "yField": "scales",
-            "color": [
-                "#CFCFE2"
-            ]
-        }
-        return {
-            "config": config,
-            "url_data": "https://gw.alipayobjects.com/os/bmw-prod/1d565782-dde4-4bb6-8946-ea6a38ccf184.json"
+async def generate_data(request_text: UserInputText):
+    user_message = request_text.text
 
-        }
-    return {}
+    response_data = await get_chart_and_function(user_message, chart_json)
+    function_response = execute_function_from_json(response_data)
+
+    config_data = json.loads(response_data.get("chart_info", "{}"))
+
+    chart_name = config_data.get("chart_name", "")
+
+    return {
+        "chart_name": chart_name,
+        "config": config_data,
+        "url_data": function_response,
+    }
+
+
+
+

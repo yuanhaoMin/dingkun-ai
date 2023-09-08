@@ -1,20 +1,12 @@
 from app.api.dependency.database import table_schemas_instance
 from app.chain.generator_code_chains import ai_analyze_query_result_to_code_chain
 from app.chain.sql_chains import natural_language_to_sql_chain
-from app.util.execution_util import run_code_to_get_svg
+from app.util.execution_util import run_code_to_get_svg, run_async_tasks
 from app.util.sql_util import get_db, execute_sql
-from datetime import datetime
 import json
 from app.knowledge.api_json import functions
 from app.util.openai_util import chat_completion_request, completion
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from app.util.time_utll import timeit
-
-current_date = datetime.now().strftime("%Y-%m-%d")
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-today = datetime.today().date()
-day_of_week = days[today.weekday()]
+from app.util.time_utll import timeit, get_current_date_and_day
 
 
 def generate_data_report(input_text: str) -> str:
@@ -27,6 +19,9 @@ def generate_data_report(input_text: str) -> str:
     返回:
     - SVG数据。
     """
+
+    # 获取当前日期和星期
+    current_date, day_of_week = get_current_date_and_day()
 
     # 第一步：自然语言转sql
     try:
@@ -96,17 +91,19 @@ def execute_sql_query(sql_query: str) -> list:
 
 
 def create_guidance_message(user_message):
-    messages = []
-    messages.append({
+    current_date, day_of_week = get_current_date_and_day()
+    messages = [{
         "role": "system",
-        "content": "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous."
-    })
-    messages.append({"role": "user", "content": user_message})
+        "content": f"Don't make assumptions about what values to plug into functions. Ask for clarification if a user"
+                   f"request is ambiguous. Today is {day_of_week}, {current_date}."
+    }, {"role": "user", "content": user_message}]
     return messages
 
 
 def create_chart_config_prompt_message(user_message, chart_json):
+    current_date, day_of_week = get_current_date_and_day()
     prompt = f"""
+        Today is {day_of_week}, {current_date}.
         Based on the user's request and using the provided chart dictionary:
         ```
         {chart_json}
@@ -116,24 +113,24 @@ def create_chart_config_prompt_message(user_message, chart_json):
         {{
             "chart_name": "<String>",
             "title": {{
-                "visible": True,
+                "visible": true,
                 "text": "<Title Text>"
             }},
             "description": {{
                 "text": "<Description Text>"
             }},
             "legend": {{
-                "flipPage": False
+                "flipPage": false
             }},
             "xAxis": {{
                 "title": {{
-                    "visible": True,
+                    "visible": true,
                     "text": "<X-axis Title>"
                 }}
             }},
             "yAxis": {{
                 "title": {{
-                    "visible": True,
+                    "visible": true,
                     "text": "<Y-axis Title>"
                 }}
             }},
@@ -141,27 +138,23 @@ def create_chart_config_prompt_message(user_message, chart_json):
         }}
         """
     str_ = 'Must follow the format and not reply to any other words!'
-    messages = []
-    messages.append({"role": "system", "content": prompt})
-    messages.append({"role": "user", "content": user_message + str_})
+    messages = [{"role": "system", "content": prompt}, {"role": "user", "content": user_message + str_}]
     return messages
 
 
-def get_chart_and_function(user_message, chart_json):
+async def get_chart_and_function(user_message, chart_json):
     messages = create_guidance_message(user_message)
     messages2 = create_chart_config_prompt_message(user_message, chart_json)
 
-    async def run_async(func, *args):
-        with ThreadPoolExecutor() as executor:
-            return await asyncio.get_event_loop().run_in_executor(executor, func, *args)
+    chat_response, completion_response = await run_async_tasks([
+        (chat_completion_request, [messages, functions]),
+        (completion, [messages2])
+    ])
 
-    loop = asyncio.get_event_loop()
-    chat_response, completion_response = loop.run_until_complete(
-        asyncio.gather(
-            run_async(chat_completion_request, messages, functions),
-            run_async(completion, messages2)
-        )
-    )
+    # 检查chat_response是否是预期的HTTP响应对象
+    if isinstance(chat_response, Exception):
+        print(f"Error in chat_completion_request: {chat_response}")
+        raise chat_response  # 或者返回一个默认的结果
 
     assistant_message = chat_response.json()["choices"][0]["message"]
 
@@ -169,5 +162,4 @@ def get_chart_and_function(user_message, chart_json):
         'function_call': assistant_message.get('function_call', {}),
         'chart_info': completion_response
     }
-
     return result
