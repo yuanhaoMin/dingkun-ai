@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, MetaData, text
 
 from app.api.dependency.database import table_schemas_instance
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqldb://root:root@localhost/uwb_test"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqldb://qkwl:qkwl2018@139.9.82.225:3306/uwb_test"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
