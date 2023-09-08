@@ -16,9 +16,9 @@ Install dependencies
 """
 import dotenv
 import uvicorn
-
 """
 Manually paste the following dependency into the requirements.txt file:
 jsonschema==4.19.0
+mysqlclient==2.2.0
 starlette==0.27.0
 """

@@ -2,12 +2,10 @@ import logging
 from app.config.api_config import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion
-import openai
 import requests
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 logger = logging.getLogger(__name__)
-
 
 def completion(messages: list[dict]) -> str:
     contents = []
@@ -40,7 +38,7 @@ def completion(messages: list[dict]) -> str:
                 )
             else:
                 logger.warning(
-                    "Failed to get completion response from OpenAI API. Retrying..."
+                    "Failed to get completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
 
@@ -53,18 +51,14 @@ class Conversation:
         self.messages.append({"role": "system", "content": self.prompt})
 
     def ask(self, question):
-        try:
-            self.messages.append({"role": "user", "content": question})
-            message = completion(self.messages)
-        except Exception as e:
-            print(e)
-            return e
+        self.messages.append({"role": "user", "content": question})
+        ai_response = completion(self.messages)
 
-        self.messages.append({"role": "assistant", "content": message})
+        self.messages.append({"role": "assistant", "content": ai_response})
 
         if len(self.messages) > self.num_of_round * 2 + 1:
             del self.messages[1:3]
-        return message
+        return ai_response
 
     def save_messages_to_file(self, filename="temp.txt"):
         with open(filename, 'w', encoding='utf-8') as file:
@@ -76,7 +70,7 @@ class Conversation:
 def chat_completion_request(messages, functions=None, function_call=None, model="gpt-3.5-turbo-0613"):
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + openai.api_key,
+        "Authorization": "Bearer " + get_openai_key(),
     }
     json_data = {"model": model, "messages": messages}
     if functions is not None:
@@ -91,6 +85,6 @@ def chat_completion_request(messages, functions=None, function_call=None, model=
         )
         return response
     except Exception as e:
-        print("Unable to generate ChatCompletion response")
-        print(f"Exception: {e}")
-        return e
+        logger.warning(
+            "Failed to get function call response from OpenAI API. Retrying... Error: {e}"
+        )

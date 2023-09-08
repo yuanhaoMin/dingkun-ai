@@ -3,6 +3,7 @@
 import time
 
 import schedule
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.background import BackgroundTasks
 
@@ -12,6 +13,8 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from app.db.session.mysql_db import reflect_log_tables
 
+# Make sure .env is loaded before invoking
+load_dotenv()
 middleware = [
     Middleware(
         CORSMiddleware,
