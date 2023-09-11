@@ -2,7 +2,7 @@ import json
 
 from xpinyin import Pinyin
 
-MAX_DISTANCE = 3
+MAX_DISTANCE = 2
 
 
 class PyEditDistance:
@@ -181,4 +181,3 @@ def closest_value_match(json_str_or_dict, check_key, str1, str2, max_distance=10
         return str1
     elif dist2 < dist1 and dist2 <= max_distance:
         return str2
-

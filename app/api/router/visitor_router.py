@@ -51,44 +51,12 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
     pyedit = PyEditDistance(department_persons_dict)
 
     for entry in result_str:
-        contact_person = entry.get('contactPerson') or ""
-        contact_org = entry.get('contactOrg') or ""
+        optimize_entry(entry, pyedit, department_codes, person_ids)
 
-        # 只有当两者中至少有一个不是空字符串时，才执行以下代码
-        if contact_person or contact_org:
-            relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org,
-                                                                                             contact_person)
-            if relationship == "受访部门存在，受访人存在":
-                entry['contactOrg'] = closest_department
-                entry['contactPerson'] = closest_person
-                entry['departmentCode'] = department_codes.get(closest_department)
-                entry['id'] = person_ids.get(closest_person)
-            elif relationship == "受访部门存在，受访人不存在":
-                entry['contactOrg'] = closest_department
-                entry['departmentCode'] = department_codes.get(closest_department)
-                entry['id'] = None
-            elif relationship == "受访部门不存在，受访人存在":
-                entry['contactPerson'] = closest_person
-                entry['departmentCode'] = None
-                entry['id'] = person_ids.get(closest_person)
-            elif relationship == "受访部门存在，受访人不对应":
-                entry['contactOrg'] = closest_department
-                entry['contactPerson'] = closest_person
-                entry['departmentCode'] = department_codes.get(closest_department)
-                entry['id'] = person_ids.get(closest_person)
-            elif relationship == "受访部门自动关联，受访人存在":
-                entry['contactOrg'] = closest_department  # 这里使用自动关联的 closest_department
-                entry['contactPerson'] = closest_person
-                entry['departmentCode'] = department_codes.get(closest_department)
-                entry['id'] = person_ids.get(closest_person)
-            else:
-                entry['departmentCode'] = None
-                entry['id'] = None
-
-        final_result = {
-            'sessionId': request.sessionId,
-            'data': result_str
-        }
+    final_result = {
+        'sessionId': request.sessionId,
+        'data': result_str
+    }
     return final_result
 
 
@@ -109,3 +77,56 @@ def check_and_update_visiting_reason(response: list) -> list:
     if closest_match:
         response[0]["visitingReason"] = closest_match
     return response
+
+
+def optimize_entry(entry, pyedit, department_codes, person_ids):
+    contact_person = entry.get('contactPerson') or ""
+    contact_org = entry.get('contactOrg') or ""
+
+    if not contact_person and not contact_org:
+        # 两者都没有，不做处理
+        return entry
+
+    if contact_person and contact_org:
+        # 部门和名字都做最近处理的优化
+        relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org, contact_person)
+
+        # 部门和人员都有
+        if relationship == "受访部门存在，受访人存在":
+            entry['contactOrg'] = closest_department
+            entry['contactPerson'] = closest_person
+            entry['departmentCode'] = department_codes.get(closest_department)
+            entry['id'] = person_ids.get(closest_person)
+        elif relationship == "受访部门存在，受访人不存在":
+            entry['contactOrg'] = closest_department
+            entry['departmentCode'] = department_codes.get(closest_department)
+        elif relationship == "受访部门不存在，受访人存在":
+            entry['contactPerson'] = closest_person
+            entry['id'] = person_ids.get(closest_person)
+        elif relationship == "受访部门存在，受访人不对应":
+            entry['contactOrg'] = closest_department
+            entry['contactPerson'] = closest_person
+            entry['departmentCode'] = department_codes.get(closest_department)
+            entry['id'] = person_ids.get(closest_person)
+        elif relationship == "受访部门自动关联，受访人存在":
+            entry['contactOrg'] = closest_department  # 这里使用自动关联的 closest_department
+            entry['contactPerson'] = closest_person
+            entry['departmentCode'] = department_codes.get(closest_department)
+            entry['id'] = person_ids.get(closest_person)
+        else:
+            entry['departmentCode'] = None
+            entry['id'] = None
+
+    elif contact_org:
+        relationship, closest_department, _, closest_person, _ = pyedit.get_relationship(contact_org, '')
+        # 只有部门
+        entry['contactOrg'] = closest_department
+        entry['departmentCode'] = department_codes.get(closest_department)
+
+    elif contact_person:
+        relationship, closest_department, _, closest_person, _ = pyedit.get_relationship('', contact_person)
+        # 只有名字
+        entry['contactPerson'] = closest_person
+        entry['id'] = person_ids.get(closest_person)
+
+    return entry
