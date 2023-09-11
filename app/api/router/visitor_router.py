@@ -44,7 +44,8 @@ def smart_determine_registration_function_call(request: DetermineFunctionCallReq
     result_str = visitor_logic.smart_determine_companion_registration_function_call(
         request.sessionId,
         replaced_text,
-        department_names
+        department_names,
+        request.historyData
     )
     check_and_update_visiting_reason(result_str)
     pyedit = PyEditDistance(department_persons_dict)

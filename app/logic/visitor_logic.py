@@ -58,7 +58,7 @@ def remove_expired_sessions():
         SESSION_STORE.pop(key)
 
 
-def smart_determine_companion_registration_function_call(sessionId: str, text: str, department_names: List[str]) -> str:
+def smart_determine_companion_registration_function_call(sessionId: str, text: str, department_names: List[str],history_data=None) -> str:
     if not department_names:
         department_names = []
     departments_str = ",".join(department_names)
@@ -70,6 +70,11 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
     prompt = create_prompt_from_template_file(
         filename="visitor_register_smart_prompts", replacements=replacements
     )
+
+    if history_data:
+        parsed_history_data = json.loads(history_data)
+        if contains_non_null_values(parsed_history_data):
+            text = f"Current situation: {history_data}. " + text
 
     if sessionId not in SESSION_STORE:
         conversation = Conversation(prompt, num_of_round=5)
@@ -128,3 +133,18 @@ def merge_previous_data(previous: list, current: list) -> list:
                 if prev_dict[key] is not None and curr_dict[key] is None:
                     curr_dict[key] = prev_dict[key]
     return current
+
+def contains_non_null_values(data):
+    """检查数据中是否存在非null的值"""
+    if isinstance(data,
+dict):
+        for key, value in data.items():
+            if value is not None:
+                return True
+            if isinstance(value, (dict, list)) and contains_non_null_values(value):
+                return True
+    elif isinstance(data, list):
+        for item in data:
+            if contains_non_null_values(item):
+                return True
+    return False
