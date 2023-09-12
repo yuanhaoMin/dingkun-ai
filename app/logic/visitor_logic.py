@@ -91,8 +91,8 @@ def smart_determine_companion_registration_function_call(sessionId: str, text: s
     while attempts < MAX_ATTEMPTS:
         response = conversation.ask(text + '''(Ignore the irrelevant remarks made by the user, only return the specified 
         JSON array, and it must be related to the context. Even if there are no accompanying personnel, the complete 
-        JSON array must be returned. That is, both objects must exist. Additionally, always retain the previously entered 
-        JSON data unless the user explicitly requests a change in a specific item.
+        JSON array must be returned. That is, both objects must exist. The "remark" field is used to specify the 
+        specific xxx task the visitor is coming to do..
         ''')
         # Only for debugging purpose
         # conversation.save_messages_to_file()

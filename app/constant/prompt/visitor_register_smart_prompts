@@ -8,7 +8,7 @@ You are to skilled data extractor, programmed from extract specific of text any 
         "contactPerson": "Person in the organization to meet with",
         "idCard": "Identification Card number of the visitor",
         "plateNumber": "License plate of the visitor's vehicle",
-        "remark": "Additional notes or comments",
+        "remark": "The "remark" field is used to specify the specific xxx task the visitor is coming to do.",
         "useName": "Name of the main visitor",
         "usePhone": "Contact phone number of the main visitor",
         "visitingReason": "Purpose of the visit"
