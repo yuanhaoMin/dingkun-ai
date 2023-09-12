@@ -41,7 +41,8 @@ def determine_registration_function_call(request: DetermineFunctionCallRequestSm
     result_str = visitor_logic.determine_registration_function_call(
         request.sessionId,
         request.text,
-        department_names
+        department_names,
+        request.historyData
     )
 
     final_result = {

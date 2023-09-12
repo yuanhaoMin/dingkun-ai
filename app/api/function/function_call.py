@@ -13,6 +13,14 @@ def patrolTrend(months=1):
     return f"http://127.0.0.1:9000/mock/patrolTrend?months={months}"
 
 
+def queryInspectionCompletion(region=None):
+    return f"http://127.0.0.1:9000/mock/queryInspectionCompletion"
+
+
+
+def getInspectionProgress(days=1):
+    return f"http://127.0.0.1:9000/mock/getInspectionProgress?days={days}"
+
 def execute_function_from_json(data):
     # 提取function_call字段
     function_call = data["function_call"]

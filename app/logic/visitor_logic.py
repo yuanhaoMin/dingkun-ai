@@ -13,7 +13,8 @@ MAX_ATTEMPTS = 3
 MAX_SESSION_COUNT = 1000
 
 
-def determine_registration_function_call(sessionId: str, text: str, department_names: List[str]) -> str:
+def determine_registration_function_call(sessionId: str, text: str, department_names: List[str],
+                                         history_data=None) -> str:
     if not department_names:
         department_names = []
     current_date, day_of_week = get_current_date_and_day()
@@ -25,6 +26,11 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
     prompt = create_prompt_from_template_file(
         filename="visitor_register_prompts", replacements=replacements
     )
+    if history_data:
+        parsed_history_data = json.loads(history_data)
+        print(parsed_history_data)
+        if contains_non_null_values(parsed_history_data):
+            text = f"Current situation: {history_data}. " + text
 
     if sessionId not in SESSION_STORE:
         conversation = Conversation(prompt, num_of_round=5)
@@ -43,7 +49,7 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
         complete array with both objects. Retain the previously entered JSON unless explicitly changed by the user. 
         Ensure: 1. Proper bracket pairing: Each '{' matches with '}', and each '[' with ']'. 2. Correct comma 
         placement: Ensure no trailing comma after the last element or key-value pair.) '''
-)
+                                    )
         conversation.save_messages_to_file()
         remove_expired_sessions()
         prune_sessions()
@@ -103,7 +109,22 @@ def merge_previous_data(previous: list, current: list) -> list:
                         curr_dict[key][j] = prev_dict[key][j]
             else:
                 # 修改这里的检查逻辑，考虑到 "null"
-                if (prev_dict[key] is not None and prev_dict[key] != "null") and (curr_dict[key] is None or curr_dict[key] == "null"):
+                if (prev_dict[key] is not None and prev_dict[key] != "null") and (
+                        curr_dict[key] is None or curr_dict[key] == "null"):
                     curr_dict[key] = prev_dict[key]
     return current
 
+
+def contains_non_null_values(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if contains_non_null_values(value):
+                return True
+    elif isinstance(data, list):
+        for item in data:
+            if contains_non_null_values(item):
+                return True
+    else:
+        if data is not None:
+            return True
+    return False

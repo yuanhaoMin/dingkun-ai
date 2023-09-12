@@ -94,8 +94,9 @@ def create_guidance_message(user_message):
     current_date, day_of_week = get_current_date_and_day()
     messages = [{
         "role": "system",
-        "content": f"Don't make assumptions about what values to plug into functions. Ask for clarification if a user"
-                   f"request is ambiguous. Today is {day_of_week}, {current_date}."
+        "content": f"Determine the most likely functions to be called from the requirements given by the user, "
+                   f"and infer the appropriate parameters. "
+                   f"Today is {day_of_week}, {current_date}."
     }, {"role": "user", "content": user_message}]
     return messages
 
@@ -136,6 +137,35 @@ def create_chart_config_prompt_message(user_message, chart_json):
             }},
             "color": ["<Color Code>"]
         }}
+        If the identified chart type is Bullet, follow this FORMAT:
+        ## FORMAT (Bullet):
+        "chart_name": "<String>",
+        "color": {{
+        "range": ["<Color Code>"], 
+        "measure": ["<Color Code>"],
+        "target": "<Color Code>"
+    }},
+    "label": {{
+        "measure": {{
+            "position": "<Position>",
+            "style": {{
+                "fill": "<Color Fill>"
+            }}
+        }}
+    }},
+    "xAxis": {{
+        "line": null
+    }},
+    "yAxis": false,
+    "legend": {{
+        "custom": true,
+        "position": "bottom",
+        "items": [
+            {{"value": "<Value 1>", "name": "<Name 1>", "marker": {{"symbol": "<Symbol>", "style": {{"fill": "<Color Code>", "r": 5 }}}}}},
+            {{"value": "<Value 2>", "name": "<Name 2>", "marker": {{"symbol": "<Symbol>", "style": {{"fill": "<Color Code>", "r": 5 }}}}}}
+        ]
+    }}
+}}
         """
     str_ = 'Must follow the format and not reply to any other words!'
     messages = [{"role": "system", "content": prompt}, {"role": "user", "content": user_message + str_}]
@@ -155,11 +185,42 @@ async def get_chart_and_function(user_message, chart_json):
     if isinstance(chat_response, Exception):
         print(f"Error in chat_completion_request: {chat_response}")
         raise chat_response  # 或者返回一个默认的结果
-
     assistant_message = chat_response.json()["choices"][0]["message"]
-
+    completion_response = process_bullet_chart(completion_response)
     result = {
         'function_call': assistant_message.get('function_call', {}),
         'chart_info': completion_response
     }
     return result
+
+
+def process_bullet_chart(chart_data):
+    """
+    Process the chart data for Bullet charts.
+
+    :param chart_data: The raw chart data to process.
+    :return: Processed chart data.
+    """
+    try:
+        # 尝试将输入数据从字符串解析为JSON对象
+        parsed_data = json.loads(chart_data)
+    except json.JSONDecodeError:
+        # 如果解析失败，则直接返回原始数据
+        return chart_data
+
+    # 判断chart_name是否为Bullet
+    if parsed_data.get("chart_name") == "Bullet":
+        # 在顶层添加额外的键值对
+        additional_fields = {
+            "measureField": "measures",
+            "rangeField": "ranges",
+            "targetField": "target",
+            "xField": "title"
+        }
+        parsed_data.update(additional_fields)
+
+        # 将更新后的parsed_data转换回JSON字符串
+        chart_data = json.dumps(parsed_data)
+
+    return chart_data
+
