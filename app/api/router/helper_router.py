@@ -4,7 +4,8 @@ from fastapi import APIRouter, UploadFile
 from pydantic import BaseModel
 
 from app.interpreter.bot_backend import BotBackend, get_config
-from app.logic.helper_logic import bot, add_text, refresh_file_display, add_file, switch_to_gpt4, undo_upload_file
+from app.logic.helper_logic import bot, add_text, refresh_file_display, add_file, switch_to_gpt4, undo_upload_file, \
+    restart_bot_backend
 
 router = APIRouter(
     prefix="/helper",
@@ -59,4 +60,6 @@ def undo_uploadfile():
 @router.get("/restart")
 def restart():
     global HISTORY
+    HISTORY.clear()
+    restart_bot_backend(STATE)
     return {"data": "OK"}

@@ -166,3 +166,5 @@ test
 temp.txt
 
 cache
+
+app/config/config.json

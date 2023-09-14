@@ -29,7 +29,6 @@ def natural_language_to_sql_chain(
     prompt = create_prompt_from_template_file(
         filename="sql_generator_prompts", replacements=replacements
     )
-    print(prompt)
 
     # 构造与AI对话的消息列表
     messages = [

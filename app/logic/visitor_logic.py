@@ -28,7 +28,6 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
     )
     if history_data:
         parsed_history_data = json.loads(history_data)
-        print(parsed_history_data)
         if contains_non_null_values(parsed_history_data):
             text = f"Current situation: {history_data}. " + text
 

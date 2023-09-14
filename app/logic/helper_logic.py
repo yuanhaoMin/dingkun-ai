@@ -64,7 +64,6 @@ def undo_upload_file(state_dict: Dict, history: List) -> List:
 
 
 def refresh_file_display(state_dict: Dict) -> List[str]:
-    print(os.getcwd())
     bot_backend = get_bot_backend(state_dict)
     work_dir = bot_backend.jupyter_work_dir
     filenames = os.listdir(work_dir)

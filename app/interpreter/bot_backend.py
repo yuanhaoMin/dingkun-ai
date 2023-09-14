@@ -23,6 +23,18 @@ functions = [
         },
     }
 ]
+# functions.extend([
+#     {
+#         "name": "process_text_file",
+#         "description": "This function allows you to process a given text file. You only need to provide the filename, and the AI will handle the rest.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {"filename": {"type": "string", "description": "The name of the uploaded text file."}},
+#             "required": ["filename"],
+#         },
+#     }
+# ])
+
 
 system_msg = """You are an AI code interpreter.
 Your goal is to help users do a variety of jobs by executing Python code.
@@ -38,7 +50,6 @@ to the letter.
 4. If error occurred, try to fix it.
 
 Note: If the user uploads a file, you will receive a system message "User uploaded a file: filename". Use the filename as the path in the code. """
-
 
 def config_openai_api(api_type, api_base, api_version, api_key):
     openai.api_type = api_type
@@ -151,6 +162,10 @@ class BotBackend(GPTResponseLog):
         )
 
     def add_text_message(self, user_text):
+        """
+            添加用户文本消息到对话中。
+            :param user_text: 用户的文本内容
+        """
         self.conversation.append({"role": "user", "content": user_text})
         self.revocable_files.clear()
         self.update_finish_reason(finish_reason="new_input")
@@ -180,6 +195,12 @@ class BotBackend(GPTResponseLog):
     def add_function_call_response_message(
             self, function_response: str, save_tokens=True
     ):
+        """
+            添加函数调用的响应消息到对话中。
+
+            :param function_response: 函数的响应内容
+            :param save_tokens: 是否保存tokens
+        """
         self.conversation.append(
             {
                 "role": self.assistant_role_name,
@@ -202,6 +223,10 @@ class BotBackend(GPTResponseLog):
         )
 
     def revoke_file(self):
+        """
+            撤销文件上传操作。
+            :return: 如果有文件被撤销则返回相应的机器人消息，否则返回None。
+        """
         if self.revocable_files:
             file = self.revocable_files[-1]
             bot_msg = file["bot_msg"]
@@ -224,6 +249,9 @@ class BotBackend(GPTResponseLog):
         self._init_kwargs_for_chat_completion()
 
     def restart(self):
+        """
+            重启机器人后端，清除工作目录中的所有文件并重置对话。
+        """
         self._clear_all_files_in_work_dir()
         self.revocable_files.clear()
         self._init_conversation()

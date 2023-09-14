@@ -9,15 +9,4 @@ def replace_custom_format(text, replacements):
     return text
 
 
-# 示例
-template = """
-The appointment time should be in the format "YYYY-MM-DD [上午/下午]", for instance, based on the current date "current_time: {current_time}".current_time: {current_time}
-Text to extract from: {text}
-"""
 
-replacements = {
-    "current_time:": "2023-08-09",
-    "Text to extract from:": "hello"
-}
-
-print(replace_custom_format(template, replacements))

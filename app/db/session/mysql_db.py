@@ -22,7 +22,6 @@ metadata = MetaData()
 def reflect_log_tables():
     # Check if the engine exists
     if not engine:
-        print("Database not configured. Skipping log table reflection.")
         return
 
     try:
