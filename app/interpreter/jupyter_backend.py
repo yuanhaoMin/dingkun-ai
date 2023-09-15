@@ -64,20 +64,19 @@ class JupyterKernel:
             - list: 包含输出标记和对应输出内容的列表。
         """
         # 检查code中是否有指定的文件名扩展
-        if 'filename = "' in code:
+        if 'filename = "' in code or "filename = '" in code:
             if '.txt"' in code:
                 files = extract_file_paths_from_code(code)
                 text = extract_text_from_TXT(files)
-                return [("execute_result_text", text)]
+                return [("extracted_text", text)]
             elif '.docx"' in code:
                 files = extract_file_paths_from_code(code)
                 text = extract_text_from_DOCX(files)
-                print(text)
-                return [("execute_result_text", text)]
+                return [("extracted_text", text)]
             elif '.pdf"' in code:
                 files = extract_file_paths_from_code(code)
                 text = extract_text_from_PDF(files)
-                return [("execute_result_text", text)]
+                return [("extracted_text", text)]
         msg_id = self.kernel_client.execute(code)
 
         # Get the output of the code
