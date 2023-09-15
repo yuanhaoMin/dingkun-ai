@@ -3,6 +3,9 @@ import re
 
 import jupyter_client
 
+from app.util.file_processing_utli import extract_text_from_TXT, extract_text_from_DOCX, extract_text_from_PDF, \
+    extract_file_paths_from_code
+
 
 def delete_color_control_char(string):
     """
@@ -60,6 +63,21 @@ class JupyterKernel:
             返回:
             - list: 包含输出标记和对应输出内容的列表。
         """
+        # 检查code中是否有指定的文件名扩展
+        if 'filename = "' in code:
+            if '.txt"' in code:
+                files = extract_file_paths_from_code(code)
+                text = extract_text_from_TXT(files)
+                return [("execute_result_text", text)]
+            elif '.docx"' in code:
+                files = extract_file_paths_from_code(code)
+                text = extract_text_from_DOCX(files)
+                print(text)
+                return [("execute_result_text", text)]
+            elif '.pdf"' in code:
+                files = extract_file_paths_from_code(code)
+                text = extract_text_from_PDF(files)
+                return [("execute_result_text", text)]
         msg_id = self.kernel_client.execute(code)
 
         # Get the output of the code
@@ -128,6 +146,7 @@ class JupyterKernel:
             - tuple: 格式化的输出字符串和原始内容。
         """
         text_to_gpt = []
+        print(code)
         content_to_display = self.execute_code_(code)
         for mark, out_str in content_to_display:
             if mark in ("stdout", "execute_result_text", "display_text"):

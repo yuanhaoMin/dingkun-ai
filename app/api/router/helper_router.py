@@ -1,7 +1,9 @@
+import json
 import logging
 
 from fastapi import APIRouter, UploadFile
 from pydantic import BaseModel
+from starlette.responses import StreamingResponse
 
 from app.interpreter.bot_backend import BotBackend, get_config
 from app.logic.helper_logic import bot, add_text, refresh_file_display, add_file, switch_to_gpt4, undo_upload_file, \
@@ -31,9 +33,15 @@ HISTORY = []
 
 @router.post("/send-text")
 def send_text(message: TextMessage):
-    global HISTORY
+    global HISTORY, STATE
     HISTORY = add_text(STATE, HISTORY, message.text)
-    return {"data": bot(STATE, HISTORY)}
+
+    def generate():
+        global HISTORY, STATE
+        for h in bot(STATE, HISTORY):
+            yield json.dumps({"data": h[-1][-1]}, ensure_ascii=False)
+
+    return StreamingResponse(generate(), media_type="application/json;charset=utf-8")
 
 
 @router.get("/files")

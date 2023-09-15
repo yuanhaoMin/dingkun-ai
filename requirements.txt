@@ -18,3 +18,7 @@ uvicorn==0.23.2
 xpinyin==0.7.6
 notebook==6.5.4
 python-multipart
+langchain==0.0.289
+docx2txt==0.8
+PyPDF2
+chardet

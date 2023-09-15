@@ -270,7 +270,6 @@ class FinishReasonChoiceStrategy(ChoiceStrategy):
                 tuple: 更新后的历史记录和 whether_exit 标记。
         """
         function_dict = bot_backend.jupyter_kernel.available_functions
-
         if bot_backend.content:
             bot_backend.add_gpt_response_content_message()
 
@@ -395,7 +394,6 @@ def parse_response(chunk, history, bot_backend: BotBackend):
     - tuple: 更新后的历史记录和 whether_exit 标记。
     """
     whether_exit = False
-    print(chunk)
     if chunk["choices"]:
         choice = chunk["choices"][0]
         choice_handler = ChoiceHandler(choice=choice)

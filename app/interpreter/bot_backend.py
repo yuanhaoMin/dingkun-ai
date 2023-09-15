@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import *
 
 import openai
+from langchain.embeddings import OpenAIEmbeddings
 
-from app.config.api_config import get_config, config
+from app.config.api_config import get_config, config, get_openai_key
 from app.interpreter.jupyter_backend import JupyterKernel
+from app.util.file_processing_utli import split_content_into_chunks, save_chunks_into_vectorstore
 
 functions = [
     {
@@ -15,10 +17,12 @@ functions = [
         "description": "This function allows you to execute Python code and retrieve the terminal output. If the code "
                        "generates image output, the function will return the text '[image]'. The code is sent to a "
                        "Jupyter kernel for execution. The kernel will remain active after execution, retaining all "
-                       "variables in memory.",
+                       "variables in memory. If you want to view a file, you don't need to provide the entire code; "
+                       "simply pass 'filename = [path_to_file]' as the parameter.",
         "parameters": {
             "type": "object",
-            "properties": {"code": {"type": "string", "description": "The code text"}},
+            "properties": {"code": {"type": "string",
+                                    "description": "The code text or simply pass 'filename = [path_to_file]' as the parameter."}},
             "required": ["code"],
         },
     }
@@ -40,16 +44,14 @@ system_msg = """You are an AI code interpreter.
 Your goal is to help users do a variety of jobs by executing Python code.
 
 You should:
-1. Comprehend the user's requirements carefully & 
-
-
-
-to the letter. 
-2. Give a brief description for what you plan to do & call the execute_code function to run code
-3. Provide results analysis based on the execution output. 
-4. If error occurred, try to fix it.
+1. Comprehend the user's requirements carefully and to the letter. 
+2. If a user needs to inspect the content of a file, simply use the execute_code function by passing the filename with the parameter 'filename = [path_to_file]'. You don't need to write additional code for this.
+3. For other tasks, provide a brief description of what you plan to do, then call the execute_code function to run the code.
+4. Analyze the results based on the execution output. 
+5. If an error occurs, attempt to correct it.
 
 Note: If the user uploads a file, you will receive a system message "User uploaded a file: filename". Use the filename as the path in the code. """
+
 
 def config_openai_api(api_type, api_base, api_version, api_key):
     openai.api_type = api_type
@@ -191,6 +193,46 @@ class BotBackend(GPTResponseLog):
                 "path": os.path.join(work_dir, file.filename),
             }
         )
+
+    # def add_function_call_response_message(
+    #         self, function_response: str, save_tokens=True
+    # ):
+    #     """
+    #         添加函数调用的响应消息到对话中。
+    #
+    #         :param function_response: 函数的响应内容
+    #         :param save_tokens: 是否保存tokens
+    #     """
+    #     last_user_content = [item['content'] for item in reversed(self.conversation) if item['role'] == 'user'][0]
+    #     # 1. 分片function_response
+    #     chunks = split_content_into_chunks(function_response)
+    #
+    #     # 2. 保存这些片段到向量数据库中
+    #     vector_store = save_chunks_into_vectorstore(chunks, OpenAIEmbeddings(get_openai_key))
+    #
+    #     # 3. 根据用户问题计算embedding
+    #     # 4. 从向量数据库中查找与query最相关的片段
+    #     docs = vector_store.similarity_search(last_user_content)
+    #     self.conversation.append(
+    #         {
+    #             "role": self.assistant_role_name,
+    #             "name": self.function_name,
+    #             "content": self.function_args_str,
+    #         }
+    #     )
+    #
+    #     # if save_tokens and len(function_response) > 500:
+    #     #     function_response = (
+    #     #         f"{function_response[:200]}\n[Output too much, the middle part output is omitted]\n "
+    #     #         f"End part of output:\n{function_response[-200:]}"
+    #     #     )
+    #     self.conversation.append(
+    #         {
+    #             "role": "function",
+    #             "name": self.function_name,
+    #             "content": docs.page_content,
+    #         }
+    #     )
 
     def add_function_call_response_message(
             self, function_response: str, save_tokens=True
