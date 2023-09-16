@@ -86,5 +86,5 @@ def chat_completion_request(messages, functions=None, function_call=None, model=
         return response
     except Exception as e:
         logger.warning(
-            "Failed to get function call response from OpenAI API. Retrying... Error: {e}"
+            f"Failed to get function call response from OpenAI API. Retrying... Error: {e}"
         )
