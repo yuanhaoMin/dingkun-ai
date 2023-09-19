@@ -1,5 +1,4 @@
 import json
-
 from fastapi import APIRouter, UploadFile,File
 import logging
 
@@ -35,7 +34,7 @@ current_date, day_of_week = get_current_date_and_day()
 @router.post("/upload-business-file/")
 def upload_business_file(request: FileUploadRequest):
     collection_name = "dingkun"
-    process_and_store_file_to_database(request.file, collection_name, request.role)
+    process_and_store_file_to_database(request.file, collection_name)
     return {"message": f"{request.file.filename} has been successfully uploaded to the knowledge base."}
 
 
