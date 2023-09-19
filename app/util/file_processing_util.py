@@ -109,7 +109,7 @@ def process_txt_to_str(file: UploadFile) -> str:
     return remove_blank_lines(content)
 
 
-def create_document_from_file(file: UploadFile) -> List[Document]:
+def create_document_from_file(file: UploadFile,user_id: str) -> List[Document]:
     # Determine file type and process accordingly
     if file.filename.endswith('.txt'):
         content = process_txt_to_str(file)
@@ -125,6 +125,7 @@ def create_document_from_file(file: UploadFile) -> List[Document]:
     metadata = {
         "source": file.filename,
         "creation_time": creation_time,
+        "user_id": user_id,
         "page": 0
     }
 
@@ -134,52 +135,15 @@ def create_document_from_file(file: UploadFile) -> List[Document]:
     # Return the Document object inside a list
     return [doc]
 
-#
-# def process_and_store_file_to_database(file: UploadFile, collection_name: str, chunk_size: int = 500,
-#                                        chunk_overlap: int = 100, uri: str = None, token: str = None):
-#     if uri is None:
-#         uri = get_milvus_uri()
-#     if token is None:
-#         token = get_milvus_token()
-#
-#     # Step 1: Create a Document from the uploaded file
-#     doc = create_document_from_file(file)
-#     text_spli = RecursiveCharacterTextSplitter(
-#         chunk_size=chunk_size,
-#         chunk_overlap=chunk_overlap,
-#     )
-#     docs = text_spli.split_documents(doc)
-#
-#     # Extract texts and metadatas from docs
-#     texts = [document.page_content for document in docs]
-#     metadatas = [document.metadata for document in docs]
-#
-#     connection_args = {
-#         "uri": uri,
-#         "token": token,
-#         "secure": True,
-#     }
-#
-#     # Use Milvus.from_texts method
-#     vector_db = Milvus.from_texts(
-#         collection_name=collection_name,
-#         texts=texts,
-#         embedding=OpenAIEmbeddings(),
-#         metadatas=metadatas,
-#         connection_args=connection_args
-#     )
 
-
-
-
-def process_and_store_file_to_database(file: UploadFile, collection_name: str, chunk_size: int = 500, chunk_overlap: int = 100, uri: str = None, token: str = None):
+def process_and_store_file_to_database(file: UploadFile, user_id: str ,collection_name: str, chunk_size: int = 500, chunk_overlap: int = 100, uri: str = None, token: str = None):
     if uri is None:
         uri = get_milvus_uri()
     if token is None:
         token = get_milvus_token()
 
     # Step 1: Create a Document from the uploaded file
-    doc = create_document_from_file(file)
+    doc = create_document_from_file(file,user_id)
     text_spli = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -209,5 +173,8 @@ def process_and_store_file_to_database(file: UploadFile, collection_name: str, c
         list_of_rows.append(row)
 
     # Create MilvusClient instance and insert data
-    client = MilvusClient(uri=uri, token=token, secure=True)
+    client = MilvusClient(
+        uri=get_milvus_uri(),
+        token=get_milvus_token()
+    )
     client.insert(collection_name, list_of_rows)

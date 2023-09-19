@@ -1,6 +1,4 @@
 import logging
-
-from app.agent.file_qa_agent import get_answer_from_file
 from app.config.api_config import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion

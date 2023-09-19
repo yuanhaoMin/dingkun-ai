@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, MetaData, text
 from app.api.dependency.database import table_schemas_instance
 
-load_dotenv()
+
 # Obtain database URL from environment variables
 SQLALCHEMY_DATABASE_URL = os.environ.get("SQLALCHEMY_DATABASE_URL")
 
