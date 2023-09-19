@@ -1,8 +1,7 @@
-# gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+# gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --timeout 600
 # uvicorn app.main:app --reload
-import time
-
 import schedule
+import time
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.background import BackgroundTasks

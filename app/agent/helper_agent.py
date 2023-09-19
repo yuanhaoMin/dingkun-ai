@@ -1,13 +1,14 @@
 import os
+from app.config.api_config import get_milvus_collection, get_milvus_token, get_milvus_uri
+from app.util.openai_util import completion
+from app.util.text_util import create_prompt_from_template_file
+from app.util.time_utll import get_current_date_and_day
 from langchain import OpenAI
 from langchain.agents import create_csv_agent
 from langchain.embeddings import OpenAIEmbeddings
 from pymilvus import MilvusClient
 
-from app.config.api_config import get_milvus_uri, get_milvus_token
-from app.util.openai_util import completion
-from app.util.text_util import create_prompt_from_template_file
-from app.util.time_utll import get_current_date_and_day
+
 
 current_date, day_of_week = get_current_date_and_day()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -67,7 +68,7 @@ def search_similar_texts(message, k):
 
     # 使用MilvusClient的search方法查询相似的文本
     results = client.search(
-        collection_name='dingkun',
+        collection_name=get_milvus_collection(),
         data=[vector],
         limit=k,
         output_fields=["text"]

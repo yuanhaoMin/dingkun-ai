@@ -1,20 +1,18 @@
 import logging
-from typing import Any
-from fastapi import UploadFile
-from langchain.chat_models import ChatOpenAI
 import os
 import pandas as pd
-from langchain.embeddings import OpenAIEmbeddings
-from openai.embeddings_utils import cosine_similarity, get_embedding
-from pymilvus import MilvusClient
 from app.agent.Agent import AutoProcessor
-from app.agent.helper_agent import query_csv
+from app.config.api_config import get_milvus_collection
+from app.config.api_config import get_openai_key
 from app.db.SessionManager import SessionManager
 from app.model.schema.helper_schema import DialogRequest
 from app.util.file_processing_util import process_and_store_file_to_database
-from app.util.openai_util import completion
-from app.util.text_util import create_prompt_from_template_file
 from app.util.time_utll import get_current_date_and_day
+from fastapi import UploadFile
+from langchain.chat_models import ChatOpenAI
+from openai.embeddings_utils import cosine_similarity, get_embedding
+from typing import Any
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,7 +45,7 @@ function_csv = [
 
 def create_csv_processor():
     model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model)
+    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
     function_descriptions = function_csv
     system_prompt = """
         你是名为“定坤”的智能客服助理。你的主要功能是从用户的信息中发现需求去调用执行数据分析服务。始终确保你的回答是准确、及时和有帮助的。
@@ -65,9 +63,9 @@ FILE_PATH = os.path.join(CURRENT_DIR, "..", "constant", "situations_embeddings.p
 def generate_and_save_embeddings():
     # 为三种情况创建代表性的句子或短语
     situations = {
-        "general_query": get_embedding("询问规则制度、咨询文档、一般聊天、公司规章制度", engine='text-embedding-ada-002'),
-        "data_analysis": get_embedding("数据文档分析", engine='text-embedding-ada-002'),
-        "page_navigation": get_embedding("跳转页面或查询页面相关信息", engine='text-embedding-ada-002')
+        "general_query": get_embedding("询问规则制度、咨询文档、一般聊天、公司规章制度", engine='text-embedding-ada-002', api_key=get_openai_key() ),
+        "data_analysis": get_embedding("数据文档分析", engine='text-embedding-ada-002', api_key=get_openai_key()),
+        "page_navigation": get_embedding("跳转页面或查询页面相关信息", engine='text-embedding-ada-002', api_key=get_openai_key())
     }
 
     # 使用pandas保存向量到parquet文件
@@ -97,18 +95,11 @@ def judge_message_category(message):
         if similarity > max_similarity:
             max_similarity = similarity
             best_match = situation
-
     return best_match
 
 
-
-
-
-
-
-
 def handle_upload_business_file(user_id: str, file: UploadFile):
-    collection_name = "dingkun"
+    collection_name = get_milvus_collection()
     process_and_store_file_to_database(file, user_id, collection_name)
     return f"{file.filename} 已经成功加入了知识库."
 
@@ -191,7 +182,7 @@ function_navigation = [
 
 def create_navigation_processor():
     model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model)
+    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
     function_descriptions = function_navigation
     system_prompt = """
         你是名为“导航助手”的智能客服助理。你的主要功能是帮助用户导航到他们想要的页面。
@@ -224,7 +215,7 @@ function_create_documentation = [
 
 def create_documentation_processor():
     model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model)
+    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
     function_descriptions = [
         {
             "name": "answer_documentation",

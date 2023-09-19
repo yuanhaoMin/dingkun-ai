@@ -1,7 +1,6 @@
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from app.config.api_config import get_openai_key
 
 
 # def get_chat_chain(vector_store):
