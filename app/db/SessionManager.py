@@ -15,6 +15,8 @@ class SessionManager:
         self.logger.setLevel(logging.DEBUG)
 
     def add_or_update_session(self, session_id, conversation):
+        self.remove_expired_sessions()
+        self.prune_sessions()
         if session_id not in self._store:
             self._store[session_id] = {
                 "conversation": conversation,
@@ -27,6 +29,7 @@ class SessionManager:
         self.logger.debug(f"Updated session {session_id} with conversation {conversation}")
 
     def get_session(self, session_id):
+        self.remove_expired_sessions()
         return self._store.get(session_id, {})
 
     def prune_sessions(self):

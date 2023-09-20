@@ -1,5 +1,11 @@
+import json
 import os
+
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage
+
 from app.config.api_config import get_milvus_collection, get_milvus_token, get_milvus_uri
+from app.knowledge.helper_dict import name_time_start_time_end, name_extract
 from app.util.openai_util import completion
 from app.util.text_util import create_prompt_from_template_file
 from app.util.time_utll import get_current_date_and_day
@@ -32,7 +38,7 @@ def query_csv(file_path: str, query: str) -> str:
     return agent.run(query)
 
 
-def navigate_to_page(description: str = None):
+def navigate_to_page(description: str):
     client = MilvusClient(
         uri=get_milvus_uri(),
         token=get_milvus_token()
@@ -56,14 +62,53 @@ def navigate_to_page(description: str = None):
         # 移除"id"和"vector"字段
         entity_data = hit['entity']
         entity_data.pop("id", None)
+        entity_data.pop("text", None)
         entity_data.pop("vector", None)
 
         extracted_data.append(entity_data)
 
-    return extracted_data
+    return process_or_return(extracted_data, description)
 
 
-def answer_documentation(question: str, file_path: str = None) -> str:
+def process_or_return(json_data: list, question: str) -> list:
+    # 确定使用哪个function_descriptions
+    function_descriptions = determine_function_descriptions(json_data)
+
+    model = 'gpt-3.5-turbo-0613'
+    llm = ChatOpenAI(model=model)
+    response = llm.predict_messages([HumanMessage(content=question)], functions=function_descriptions)
+
+    function_call = response.additional_kwargs.get("function_call")
+    if function_call:
+        # 解析 function_call 中的参数
+        arguments = json.loads(function_call["arguments"])
+
+        # 根据缺失的 JSON 数据来确定哪些参数需要填补
+        for item in json_data:
+            for key, value in item.items():
+                if not value:  # 如果某个字段缺失值
+                    item[key] = arguments.get(key)
+
+        return json_data
+    # 如果没有 function_call，则返回 response.content
+    return response.content
+
+
+def determine_function_descriptions(json_data: list) -> list:
+    # 根据json_data中的缺失值来决定使用哪个function_descriptions
+    missing_keys = [key for item in json_data for key, value in item.items() if not value]
+
+    # 使用set来确保key的唯一性
+    missing_keys_set = set(missing_keys)
+
+    if "time_start" in missing_keys_set or "time_end" in missing_keys_set:
+        return name_time_start_time_end
+    else:
+        return name_extract
+
+
+
+def answer_documentation(question: str) -> str:
     extra_info_list = search_similar_texts(question, 2)
 
     extra_info = ' '.join([item['text'] for item in extra_info_list])
@@ -75,9 +120,7 @@ def answer_documentation(question: str, file_path: str = None) -> str:
         filename="smart_helper_forwarding_prompts", replacements=replacements
     )
     print(prompt)
-    messages = []
-    messages.append({"role": "system", "content": prompt})
-    messages.append({"role": "user", "content": question})
+    messages = [{"role": "system", "content": prompt}, {"role": "user", "content": question}]
     res = completion(messages)
     return res
 

@@ -49,8 +49,6 @@ def determine_registration_function_call(sessionId: str, text: str, department_n
         placement: Ensure no trailing comma after the last element or key-value pair.) '''
                                     )
         conversation.save_messages_to_file()
-        session_manager.remove_expired_sessions()
-        session_manager.prune_sessions()
         try:
             # 尝试修复和解析 JSON
             fixed_response = fix_and_parse_json(response)

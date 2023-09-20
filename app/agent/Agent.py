@@ -18,6 +18,10 @@ class AutoProcessor:
         self.logger.setLevel(logging.DEBUG)
         self.log_messages = []
 
+    def update_system_prompt(self, new_system_prompt):
+        self.system_prompt = new_system_prompt
+        self.messages[0] = SystemMessage(content=self.system_prompt)
+
     def update_function_descriptions(self, new_function_descriptions):
         self.function_descriptions = new_function_descriptions
 
@@ -61,8 +65,12 @@ class AutoProcessor:
 
                 # 更新消息列表，为下一次迭代做准备
                 self.messages.append(AIMessage(content=str(response.additional_kwargs)))
+                if not isinstance(returned_value, str):
+                    returned_value_str = json.dumps(returned_value)
+                else:
+                    returned_value_str = returned_value
                 self.messages.append(
-                    ChatMessage(role='function', additional_kwargs={'name': function_name}, content=returned_value))
+                    ChatMessage(role='function', additional_kwargs={'name': function_name}, content=returned_value_str))
             else:
                 self.logger.warning(f"函数 {function_name} 不存在。")
         else:
@@ -70,17 +78,14 @@ class AutoProcessor:
             self.messages.append(
                 AIMessage(content=response.content))
 
-        # 保证消息列表只有5条消息
-        while len(self.messages) > 5:
-            popped_message = self.messages.pop(0)
-            self.logger.debug(f"从消息列表中删除一条消息: {popped_message}")
+        # 保证消息列表只有6条消息
+        while len(self.messages) > 6:
+            self.messages.pop(1)  # SystemMessage 是第0个元素
+            self.logger.debug(f"从消息列表中删除一条消息: {self.messages[1]}")
+
         messages_str = self.get_messages_with_role_and_content()
         self.logger.debug(f"Messages with role and content: {messages_str}")
         return f"{response.content if not function_call else returned_value}"
-
-    def print_messages_content(self):
-        for idx, message in enumerate(self.messages, 1):
-            self.logger.debug(f"消息 {idx}: {message.content}")
 
     def get_messages_with_role_and_content(self):
         messages_info = []
@@ -100,6 +105,9 @@ class AutoProcessor:
 
         # 返回转化为字符串的字典列表，并确保中文字符不会被转化为ASCII
         return json.dumps(messages_info, ensure_ascii=False)
+
+    def get_first_k_messages_str(self, k):
+        return "\n".join([message.content for message in self.messages[-k:]])
 
 
 def get_function_parameter_names(function):

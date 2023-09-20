@@ -1,10 +1,13 @@
-import os
+from dotenv import load_dotenv
 from fastapi import HTTPException
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, MetaData, text
 from app.api.dependency.database import table_schemas_instance
+from app.config.api_config import get_my_sql_url
 
-SQLALCHEMY_DATABASE_URL = os.environ.get("SQLALCHEMY_DATABASE_URL")
+
+load_dotenv()
+SQLALCHEMY_DATABASE_URL = get_my_sql_url()
 
 if not SQLALCHEMY_DATABASE_URL:
     raise ValueError("SQLALCHEMY_DATABASE_URL not set in environment variables!")
