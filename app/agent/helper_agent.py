@@ -8,8 +8,6 @@ from langchain.agents import create_csv_agent
 from langchain.embeddings import OpenAIEmbeddings
 from pymilvus import MilvusClient
 
-
-
 current_date, day_of_week = get_current_date_and_day()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,8 +32,35 @@ def query_csv(file_path: str, query: str) -> str:
     return agent.run(query)
 
 
-def navigate_to_page():
-    return '正在跳转请稍等'
+def navigate_to_page(description: str = None):
+    client = MilvusClient(
+        uri=get_milvus_uri(),
+        token=get_milvus_token()
+    )
+    embedding_model = OpenAIEmbeddings()
+
+    # 获取question的向量表示
+    vector = embedding_model.embed_query(description)
+
+    # 使用MilvusClient的search方法查询相似的文本
+    results = client.search(
+        collection_name=get_milvus_collection(),
+        data=[vector],
+        limit=1,
+        output_fields=["*"]  # 取回所有字段
+    )
+
+    # 从results中提取相关的信息
+    extracted_data = []
+    for hit in results[0]:
+        # 移除"id"和"vector"字段
+        entity_data = hit['entity']
+        entity_data.pop("id", None)
+        entity_data.pop("vector", None)
+
+        extracted_data.append(entity_data)
+
+    return extracted_data
 
 
 def answer_documentation(question: str, file_path: str = None) -> str:

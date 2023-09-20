@@ -14,6 +14,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pdfminer.high_level import extract_text
 from pymilvus import MilvusClient
 from app.config.api_config import get_milvus_uri, get_milvus_token
+from app.util.embeddings_util import get_embeddings_with_backoff
 
 
 def detect_encoding(file_path):
@@ -154,11 +155,8 @@ def process_and_store_file_to_database(file: UploadFile, user_id: str ,collectio
     texts = [document.page_content for document in docs]
     metadatas = [document.metadata for document in docs]
 
-    # Initialize the OpenAIEmbeddings instance
-    embedding = OpenAIEmbeddings()
-
-    # Get embeddings for each text
-    vectors = [embedding.embed_query(text) for text in texts]
+    # Use batch processing for getting embeddings
+    vectors = get_embeddings_with_backoff(texts)
 
     # Prepare data for insertion
     list_of_rows = []

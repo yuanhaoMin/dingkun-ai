@@ -5,6 +5,7 @@ from app.agent.Agent import AutoProcessor
 from app.config.api_config import get_milvus_collection
 from app.config.api_config import get_openai_key
 from app.db.SessionManager import SessionManager
+from app.knowledge.helper_dict import function_navigation, function_create_documentation, function_csv
 from app.model.schema.helper_schema import DialogRequest
 from app.util.file_processing_util import process_and_store_file_to_database
 from app.util.time_utll import get_current_date_and_day
@@ -13,34 +14,11 @@ from langchain.chat_models import ChatOpenAI
 from openai.embeddings_utils import cosine_similarity, get_embedding
 from typing import Any
 
-
 logging.basicConfig(level=logging.DEBUG)
 
 session_manager = SessionManager()
 
 current_date, day_of_week = get_current_date_and_day()
-
-function_csv = [
-    {
-        "name": "query_csv",
-        "description": "Provide data analysis services, especially when detecting .csv files or explicit data "
-                       "analysis requests.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {
-                    "type": "string",
-                    "description": "Path to the data file.如果你不知道具体请询问用户。"
-                },
-                "query": {
-                    "type": "string",
-                    "description": "Query or request related to data analysis in chinese."
-                }
-            },
-            "required": ["file_path", "query"]
-        }
-    }
-]
 
 
 def create_csv_processor():
@@ -63,7 +41,8 @@ FILE_PATH = os.path.join(CURRENT_DIR, "..", "constant", "situations_embeddings.p
 def generate_and_save_embeddings():
     # 为三种情况创建代表性的句子或短语
     situations = {
-        "general_query": get_embedding("询问规则制度、咨询文档、一般聊天、公司规章制度", engine='text-embedding-ada-002', api_key=get_openai_key() ),
+        "general_query": get_embedding("询问规则制度、咨询文档、一般聊天、公司规章制度", engine='text-embedding-ada-002',
+                                       api_key=get_openai_key()),
         "data_analysis": get_embedding("数据文档分析", engine='text-embedding-ada-002', api_key=get_openai_key()),
         "page_navigation": get_embedding("跳转页面或查询页面相关信息", engine='text-embedding-ada-002', api_key=get_openai_key())
     }
@@ -126,28 +105,30 @@ def handle_upload_data_file(user_id: str, session_id: str, file: UploadFile) -> 
     # 如果session中没有processor，则创建一个新的
     if not session_data or "processor" not in session_data:
         processor = create_csv_processor()
-        session_manager.add_or_update_session(session_id, {"processor": processor})
+        session_manager.add_or_update_session(session_id,  processor)
     else:
-        processor = session_data["processor"]
+        processor = session_data["conversation"]
 
     # 更新processor的function_descriptions为适合数据分析的描述
     function_descriptions = function_csv
     processor.update_function_descriptions(function_descriptions)
 
-    user_input = f"用户传入了{file.filename}文件，接下来使用中文回复，再没有明确要求时不要轻易调用函数"
+    user_input = f"用户传入了'{file.filename}'文件，接下来使用中文回复，再没有明确要求时不要轻易调用函数"
     return processor.process(user_input)
 
 
 def handle_dialog(request: DialogRequest):
+
     session_data = session_manager.get_session(request.session_id)
+    print(f"Session data for {request.session_id}: {session_data}")
 
     # 如果session中没有processor，则创建一个新的
-    if not session_data or "processor" not in session_data:
+    if not session_data or not session_data["conversation"]:
         processor = create_documentation_processor()  # 默认创建文档处理器
-        session_manager.add_or_update_session(request.session_id, {"processor": processor})
+        session_manager.add_or_update_session(request.session_id, processor)
     else:
-        processor = session_data["processor"]
-
+        processor = session_data["conversation"]
+    print(id(processor))
     # 判断消息属于哪种情况并更新function_descriptions
     category = judge_message_category(request.query)
     if category == "data_analysis":
@@ -157,27 +138,8 @@ def handle_dialog(request: DialogRequest):
     else:
         function_descriptions = function_create_documentation
     processor.update_function_descriptions(function_descriptions)
-
-    # 处理用户输入
-    return processor.process(request.query)
-
-
-function_navigation = [
-    {
-        "name": "navigate_to_page",
-        "description": "Help users navigate to the desired page.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "page_name": {
-                    "type": "string",
-                    "description": "Name of the page user wants to navigate to."
-                }
-            },
-            "required": ["page_name"]
-        }
-    }
-]
+    response = processor.process(request.query)
+    return response
 
 
 def create_navigation_processor():
@@ -191,55 +153,12 @@ def create_navigation_processor():
     return processor
 
 
-function_create_documentation = [
-    {
-        "name": "answer_documentation",
-        "description": "Answer questions related to company's documentation, rules, and regulations.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "document_name": {
-                    "type": "string",
-                    "description": "Name of the document or rule user is asking about."
-                },
-                "query": {
-                    "type": "string",
-                    "description": "Specific question about the document or rule."
-                }
-            },
-            "required": ["document_name", "query"]
-        }
-    }
-]
-
-
 def create_documentation_processor():
     model = 'gpt-3.5-turbo-0613'
     llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
-    function_descriptions = [
-        {
-            "name": "answer_documentation",
-            "description": "Answer questions related to company's documentation, rules, and regulations.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "document_name": {
-                        "type": "string",
-                        "description": "Name of the document or rule user is asking about."
-                    },
-                    "query": {
-                        "type": "string",
-                        "description": "Specific question about the document or rule."
-                    }
-                },
-                "required": ["document_name", "query"]
-            }
-        }
-    ]
+    function_descriptions = function_create_documentation
     system_prompt = """
         你是名为“文档助手”的智能客服助理。你的主要功能是回答与公司的文档、规章和制度相关的问题。
         """
     processor = AutoProcessor(system_prompt, model, llm, function_descriptions)
     return processor
-
-
