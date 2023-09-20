@@ -52,7 +52,7 @@ def load_situations_embeddings():
 
 def judge_message_category(message):
     situations = load_situations_embeddings()
-    message_embedding = get_embedding(message, engine='text-embedding-ada-002')
+    message_embedding = get_embedding(message, engine='text-embedding-ada-002', api_key=get_openai_key())
     max_similarity = -1
     best_match = None
 
