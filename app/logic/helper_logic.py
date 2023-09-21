@@ -1,12 +1,14 @@
 import logging
 import os
 import pandas as pd
+
 from app.agent.Agent import AutoProcessor
+from app.agent.helper_agent import navigate_to_page
 from app.config.api_config import get_milvus_collection
 from app.config.api_config import get_openai_key
 from app.db.SessionManager import SessionManager
-from app.knowledge.helper_dict import function_navigation, function_create_documentation, function_csv, \
-    csv_system_prompt, documentation_system_prompt, navigation_system_prompt
+from app.knowledge.helper_dict import function_create_documentation, function_csv, \
+    csv_system_prompt, documentation_system_prompt
 from app.model.schema.helper_schema import DialogRequest
 from app.util.file_processing_util import process_and_store_file_to_database
 from app.util.time_utll import get_current_date_and_day
@@ -14,6 +16,7 @@ from fastapi import UploadFile
 from langchain.chat_models import ChatOpenAI
 from openai.embeddings_utils import cosine_similarity, get_embedding
 from typing import Any
+from langchain.callbacks import AsyncIteratorCallbackHandler
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,18 +27,25 @@ current_date, day_of_week = get_current_date_and_day()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 FILE_PATH = os.path.join(CURRENT_DIR, "..", "constant", "situations_embeddings.parquet")
 
+# 定义常量
+GENERAL_QUERY_TEXT = "询问公司的规章制度、咨询文档、一般聊天"
+DATA_ANALYSIS_TEXT = "数据文件统计、.csv文件、数据分析服务文件中的数据"
+PAGE_NAVIGATION_TEXT = "跳转页面或查询页面相关信息、事故发生前一刻的人员分布图、人员的历史轨迹、人员的最终位置、人员的详细信息、特定人员实时轨迹、在线人员列表、在线车辆列表"
+
 
 def generate_and_save_embeddings():
-    # 为三种情况创建代表性的句子或短语
     situations = {
-        "general_query": get_embedding("询问公司的规章制度、咨询文档、一般聊天", engine='text-embedding-ada-002',
-                                       api_key=get_openai_key()),
-        "data_analysis": get_embedding("数据文件统计、.csv文件", engine='text-embedding-ada-002', api_key=get_openai_key()),
-        "page_navigation": get_embedding("跳转页面或查询页面相关信息", engine='text-embedding-ada-002', api_key=get_openai_key())
+        "general_query": [GENERAL_QUERY_TEXT,
+                          get_embedding(GENERAL_QUERY_TEXT, engine='text-embedding-ada-002', api_key=get_openai_key())],
+        "data_analysis": [DATA_ANALYSIS_TEXT,
+                          get_embedding(DATA_ANALYSIS_TEXT, engine='text-embedding-ada-002', api_key=get_openai_key())],
+        "page_navigation": [PAGE_NAVIGATION_TEXT, get_embedding(PAGE_NAVIGATION_TEXT, engine='text-embedding-ada-002',
+                                                                api_key=get_openai_key())]
     }
 
-    # 使用pandas保存向量到parquet文件
-    df = pd.DataFrame(list(situations.items()), columns=['Situation', 'Embedding'])
+    # 使用pandas保存文本和向量到parquet文件前，先将列表转为字符串
+    df = pd.DataFrame(list(situations.items()), columns=['Situation', 'TextAndEmbedding'])
+    df['TextAndEmbedding'] = df['TextAndEmbedding'].astype(str)
     df.to_parquet(FILE_PATH, index=False)
 
 
@@ -47,7 +57,20 @@ if not os.path.exists(FILE_PATH):
 # 从parquet文件加载向量
 def load_situations_embeddings():
     df = pd.read_parquet(FILE_PATH)
-    return dict(zip(df['Situation'], df['Embedding']))
+    df['TextAndEmbedding'] = df['TextAndEmbedding'].apply(eval)  # 将字符串转回为列表
+    situations_dict = dict(zip(df['Situation'], df['TextAndEmbedding']))
+
+    # 检查文本与常量是否匹配
+    for situation, (text, embedding) in situations_dict.items():
+        if situation == "general_query":
+            assert text == GENERAL_QUERY_TEXT, "Text does not match the expected text for general_query"
+        elif situation == "data_analysis":
+            assert text == DATA_ANALYSIS_TEXT, "Text does not match the expected text for data_analysis"
+        elif situation == "page_navigation":
+            assert text == PAGE_NAVIGATION_TEXT, "Text does not match the expected text for page_navigation"
+
+    # 返回仅embedding的字典
+    return {k: v[1] for k, v in situations_dict.items()}
 
 
 def judge_message_category(message):
@@ -112,46 +135,46 @@ def handle_dialog(request: DialogRequest):
         session_manager.add_or_update_session(request.session_id, processor)
     else:
         processor = session_data["conversation"]
+
     # 判断消息属于哪种情况并更新function_descriptions
-    category = judge_message_category(processor.get_first_k_messages_str(1) + request.query)
-    print('判断结果是'+category)
+    category = judge_message_category(processor.get_first_k_messages_str_excluding_sys(1) + request.query)
+    print('判断结果是' + category)
     if category == "data_analysis":
         function_descriptions = function_csv
         system_prompt = csv_system_prompt
+        processor.update_role("csv")
     elif category == "page_navigation":
-        function_descriptions = function_navigation
-        system_prompt = navigation_system_prompt
+        result = navigate_to_page(request.query)
+        return result
     else:
         function_descriptions = function_create_documentation
         system_prompt = documentation_system_prompt
+        processor.update_role("documentation")
+
+    if processor.function_descriptions != function_descriptions or processor.system_prompt != system_prompt:
+        processor.clear_messages()
     processor.update_function_descriptions(function_descriptions)
     processor.update_system_prompt(system_prompt)
-    response = processor.process(request.query)
-    return response
 
+    raw_result = processor.process(request.query)
 
-def create_navigation_processor():
-    model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
-    function_descriptions = function_navigation
-    system_prompt = navigation_system_prompt
-    processor = AutoProcessor(system_prompt, model, llm, function_descriptions)
-    return processor
+    if 'order' in raw_result:
+        processor.clear_messages()
+
+    return raw_result
 
 
 def create_documentation_processor():
-    model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
-    function_descriptions = function_create_documentation
-    system_prompt = documentation_system_prompt
-    processor = AutoProcessor(system_prompt, model, llm, function_descriptions)
+    function_descriptions = function_csv
+    system_prompt = csv_system_prompt
+    processor = AutoProcessor(system_prompt, function_descriptions)
+    processor.update_role("documentation")
     return processor
 
 
 def create_csv_processor():
-    model = 'gpt-3.5-turbo-0613'
-    llm = ChatOpenAI(model=model, openai_api_key=get_openai_key())
     function_descriptions = function_csv
     system_prompt = csv_system_prompt
-    processor = AutoProcessor(system_prompt, model, llm, function_descriptions)
+    processor = AutoProcessor(system_prompt, function_descriptions)
+    processor.update_role("csv")
     return processor
