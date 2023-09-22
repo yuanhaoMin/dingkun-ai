@@ -1,9 +1,8 @@
 import logging
 import os
 import pandas as pd
-
 from app.agent.Agent import AutoProcessor
-from app.agent.helper_agent import navigate_to_page
+from app.agent.helper_agent import navigate_to_page, answer_documentation
 from app.config.api_config import get_milvus_collection
 from app.config.api_config import get_openai_key
 from app.db.SessionManager import SessionManager
@@ -13,10 +12,8 @@ from app.model.schema.helper_schema import DialogRequest
 from app.util.file_processing_util import process_and_store_file_to_database
 from app.util.time_utll import get_current_date_and_day
 from fastapi import UploadFile
-from langchain.chat_models import ChatOpenAI
 from openai.embeddings_utils import cosine_similarity, get_embedding
 from typing import Any
-from langchain.callbacks import AsyncIteratorCallbackHandler
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -29,7 +26,7 @@ FILE_PATH = os.path.join(CURRENT_DIR, "..", "constant", "situations_embeddings.p
 
 # 定义常量
 GENERAL_QUERY_TEXT = "询问公司的规章制度、咨询文档、一般聊天"
-DATA_ANALYSIS_TEXT = "数据文件统计、.csv文件、数据分析服务文件中的数据"
+DATA_ANALYSIS_TEXT = "数据文件统计、.csv文件、数据分析服务文件中的数据、感谢您提供了表.csv文件"
 PAGE_NAVIGATION_TEXT = "跳转页面或查询页面相关信息、事故发生前一刻的人员分布图、人员的历史轨迹、人员的最终位置、人员的详细信息、特定人员实时轨迹、在线人员列表、在线车辆列表"
 
 
@@ -147,10 +144,8 @@ def handle_dialog(request: DialogRequest):
         result = navigate_to_page(request.query)
         return result
     else:
-        function_descriptions = function_create_documentation
-        system_prompt = documentation_system_prompt
-        processor.update_role("documentation")
-
+        result = answer_documentation(request.query)
+        return result
     if processor.function_descriptions != function_descriptions or processor.system_prompt != system_prompt:
         processor.clear_messages()
     processor.update_function_descriptions(function_descriptions)

@@ -2,11 +2,12 @@ import asyncio
 import inspect
 import json
 from typing import Awaitable
-
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage, ChatMessage, AIMessage
 import logging
+from app.agent.helper_agent import query_csv
 from app.config.api_config import get_openai_key
+
 
 
 class AutoProcessor:

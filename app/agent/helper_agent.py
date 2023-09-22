@@ -63,6 +63,7 @@ def navigate_to_page(description: str):
         entity_data = hit['entity']
         entity_data.pop("id", None)
         entity_data.pop("text", None)
+        entity_data.pop("link", None)
         entity_data.pop("vector", None)
 
         extracted_data.append(entity_data)
@@ -117,7 +118,9 @@ def determine_function_descriptions(json_data: list) -> list:
 
 def answer_documentation(question: str) -> str:
     extra_info_list = search_similar_texts(question, 2)
-
+    for item in extra_info_list:
+        if item.get("link") is None:
+            return navigate_to_page(question)
     extra_info = ' '.join([item['text'] for item in extra_info_list])
     replacements = {"current_date:": current_date,
                     "day_of_week:": day_of_week,
@@ -146,14 +149,17 @@ def search_similar_texts(message, k):
         collection_name=get_milvus_collection(),
         data=[vector],
         limit=k,
-        output_fields=["text"]
+        output_fields=["text", "link"]
     )
 
     # 从results中提取相关的信息
     similar_texts = []
     for hit in results[0]:
+        entity = hit['entity']
+        text = entity["text"]
+        link = entity.get("link", None)  # 使用.get()安全地尝试获取'link'字段，如果不存在则返回None
         similar_texts.append({
-            "text": hit['entity']["text"],
+            "text": text,
+            "link": link
         })
-
     return similar_texts

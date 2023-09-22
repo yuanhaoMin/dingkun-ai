@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app.api.error.json_errors import InvalidAIGeneratedJSONError, invalid_ai_generated_json_error_handler
-from app.api.router import visitor_router, data_report_router, helper_router
+from app.api.router import visitor_router, data_report_router, helper_router, dashboard_router
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from app.db.session.mysql_db import reflect_log_tables
@@ -24,6 +24,7 @@ app = FastAPI(middleware=middleware)
 app.include_router(visitor_router.router)
 app.include_router(data_report_router.router)
 app.include_router(helper_router.router)
+app.include_router(dashboard_router.router)
 app.add_exception_handler(InvalidAIGeneratedJSONError, invalid_ai_generated_json_error_handler)
 
 

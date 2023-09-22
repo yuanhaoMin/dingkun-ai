@@ -1,6 +1,8 @@
 import re
+import tempfile
 from datetime import datetime
 from io import BytesIO
+import os
 from typing import Iterator, List
 from langchain.embeddings.openai import OpenAIEmbeddings
 import chardet
@@ -23,12 +25,6 @@ def detect_encoding(file_path):
     return result['encoding']
 
 
-def process_docx_to_str(file: UploadFile) -> str:
-    raw_text = docx2txt.process(file)
-    processed_text = remove_blank_lines(raw_text)
-    return processed_text
-
-
 def process_pdf_to_str(file: UploadFile) -> str:
     # Read the content of the uploaded file into a byte stream
     file_content = file.file.read()
@@ -38,6 +34,21 @@ def process_pdf_to_str(file: UploadFile) -> str:
     raw_text = extract_text(byte_stream)
     processed_text = remove_blank_lines(raw_text)
 
+    return processed_text
+
+
+def process_docx_to_str(upload_file: UploadFile) -> str:
+    current_path = os.getcwd()
+    temp_file_path = os.path.join(current_path, "tempfile.docx")
+
+    with open(temp_file_path, 'wb') as temp:
+        temp.write(upload_file.file.read())
+
+    raw_text = docx2txt.process(temp_file_path)
+
+    os.remove(temp_file_path)
+
+    processed_text = remove_blank_lines(raw_text)
     return processed_text
 
 
@@ -110,7 +121,7 @@ def process_txt_to_str(file: UploadFile) -> str:
     return remove_blank_lines(content)
 
 
-def create_document_from_file(file: UploadFile,user_id: str) -> List[Document]:
+def create_document_from_file(file: UploadFile, user_id: str) -> List[Document]:
     # Determine file type and process accordingly
     if file.filename.endswith('.txt'):
         content = process_txt_to_str(file)
@@ -137,14 +148,15 @@ def create_document_from_file(file: UploadFile,user_id: str) -> List[Document]:
     return [doc]
 
 
-def process_and_store_file_to_database(file: UploadFile, user_id: str ,collection_name: str, chunk_size: int = 500, chunk_overlap: int = 100, uri: str = None, token: str = None):
+def process_and_store_file_to_database(file: UploadFile, user_id: str, collection_name: str, chunk_size: int = 500,
+                                       chunk_overlap: int = 100, uri: str = None, token: str = None):
     if uri is None:
         uri = get_milvus_uri()
     if token is None:
         token = get_milvus_token()
 
     # Step 1: Create a Document from the uploaded file
-    doc = create_document_from_file(file,user_id)
+    doc = create_document_from_file(file, user_id)
     text_spli = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,

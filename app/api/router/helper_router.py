@@ -1,19 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 import logging
 
-from starlette.responses import StreamingResponse
-
-from app.agent.Agent import AutoProcessor
-from app.db.SessionManager import SessionManager
-from app.knowledge.helper_dict import function_create_documentation
-from app.logic.helper_logic import handle_upload_data_file, handle_dialog, handle_upload_business_file
+from app.config.api_config import get_milvus_collection
+from app.logic.helper_logic import handle_dialog, handle_upload_data_file
 from app.model.schema.helper_schema import DialogRequest
-
-session_manager = SessionManager()
-router = APIRouter(
-    prefix="/helper",
-    tags=["helper"],
-)
+from app.util.file_processing_util import process_and_store_file_to_database
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,6 +16,11 @@ router = APIRouter(
 
 ALLOWED_FILE_EXTENSIONS = ["doc", "docx", "txt", "pdf"]
 
+
+def handle_upload_business_file(user_id: str, file: UploadFile):
+    collection_name = get_milvus_collection()
+    process_and_store_file_to_database(file, user_id, collection_name)
+    return f"{file.filename} 已经成功加入了知识库."
 
 @router.post("/upload-business-file/")
 def upload_business_file(

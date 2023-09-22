@@ -41,3 +41,17 @@ def timeit(func):
         return result
 
     return wrapper
+
+
+def get_current_time(serve_timezone="Asia/Shanghai"):
+    china_tz = pytz.timezone(serve_timezone)
+    current_datetime = datetime.now(china_tz)
+    current_time = current_datetime.strftime("%H:%M:%S")
+    return current_time
+
+
+def get_current_datetime(serve_timezone="Asia/Shanghai"):
+    china_tz = pytz.timezone(serve_timezone)
+    current_datetime = datetime.now(china_tz)
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted_datetime
