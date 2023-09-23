@@ -16,7 +16,8 @@ Install dependencies
 """
 import backup # For openai.embeddings_utils
 import dotenv
-import matplotlib # For openai.embeddings_utils
+import tabulate # For csv agent
+import matplotlib # For data report
 import plotly # For openai.embeddings_utils
 import pyarrow # For pandas
 import scipy # For openai.embeddings_utils

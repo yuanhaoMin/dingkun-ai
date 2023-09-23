@@ -1,5 +1,5 @@
 import logging
-from app.config.api_config import get_openai_key
+from app.config.environment import get_openai_key
 from fastapi import HTTPException
 from openai import ChatCompletion
 import requests
@@ -8,7 +8,7 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt
 logger = logging.getLogger(__name__)
 
 
-def completion(messages: list[dict]) -> str:
+def chat_completion_no_functions(messages: list[dict]) -> str:
     contents = []
     retry_count = 0
     max_retries = 2
@@ -35,17 +35,17 @@ def completion(messages: list[dict]) -> str:
             if retry_count > max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=f"Failed to get completion response from OpenAI API after {max_retries} retries. Error: {e}",
+                    detail=f"Failed to get chat completion response from OpenAI API after {max_retries} retries. Error: {e}",
                 )
             else:
                 logger.warning(
-                    "Failed to get completion response from OpenAI API. Retrying... Error: {e}"
+                    "Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
 
 
 class Conversation:
-    def __init__(self, prompt, num_of_round,function_map=None):
+    def __init__(self, prompt, num_of_round, function_map=None):
         self.prompt = prompt
         self.num_of_round = num_of_round
         self.function_map = function_map or {}
@@ -54,7 +54,7 @@ class Conversation:
 
     def ask(self, question):
         self.messages.append({"role": "user", "content": question})
-        ai_response = completion(self.messages)
+        ai_response = chat_completion_no_functions(self.messages)
 
         self.messages.append({"role": "assistant", "content": ai_response})
 
@@ -72,17 +72,26 @@ class Conversation:
         return ai_response
 
     def save_messages_to_file(self, filename="temp.txt"):
-        with open(filename, 'w', encoding='utf-8') as file:
+        with open(filename, "w", encoding="utf-8") as file:
             for message in self.messages:
                 file.write(f"{message['role']}: {message['content']}\n")
 
     def chat_session(self, functions=None):
         while True:
-            response = chat_completion_request(self.messages, functions=functions)
+            response = chat_completion_with_functions(
+                self.messages, functions=functions
+            )
             response = response.json()
-            if "finish_reason" in response and response["finish_reason"] == "function_call":
-                function_name = response["choices"][0]["message"]["function_call"]["name"]
-                arguments = eval(response["choices"][0]["message"]["function_call"]["arguments"])
+            if (
+                "finish_reason" in response
+                and response["finish_reason"] == "function_call"
+            ):
+                function_name = response["choices"][0]["message"]["function_call"][
+                    "name"
+                ]
+                arguments = eval(
+                    response["choices"][0]["message"]["function_call"]["arguments"]
+                )
                 func = self.function_map.get(function_name)
                 if func:
                     function_result = func(**arguments)
@@ -96,7 +105,9 @@ class Conversation:
 
 
 @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
-def chat_completion_request(messages, functions=None, function_call=None, model="gpt-3.5-turbo-0613"):
+def chat_completion_with_functions(
+    messages, functions=None, function_call=None, model="gpt-3.5-turbo"
+):
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + get_openai_key(),
