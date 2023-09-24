@@ -1,6 +1,5 @@
 import os
 import textwrap
-from app.config.environment import get_openai_key
 from app.constant.path_constants import CONSTANT_DIRECTORY_PATH, DATA_DIRECTORY_PATH
 from app.model.conversation import Conversation
 from app.model.session_manager import SessionManager
@@ -14,7 +13,9 @@ from fastapi import HTTPException
 from langchain.agents import create_csv_agent
 from langchain.agents.agent_types import AgentType
 from langchain.embeddings import OpenAIEmbeddings
-from typing import Union
+
+_MAX_DISTANCE = 0.38
+_MAX_RELEVANT_DOCS = 2
 
 
 def get_scenarios() -> dict:
@@ -34,8 +35,8 @@ def chat(session_id: str, user_message: str) -> str:
     is_function_call, relevant_docs = _determine_query_result(
         query=user_message,
         milvus_collection_name=MILVUS_COLLECTION,
-        max_docs=2,
-        max_distance=0.38,
+        max_docs=_MAX_RELEVANT_DOCS,
+        max_distance=_MAX_DISTANCE,
     )
     # 如果是函数调用，直接返回函数调用结果
     # TODO: 你之前说要加一些link和函数参数判断之类的东西, 这里可以加一个method去做
