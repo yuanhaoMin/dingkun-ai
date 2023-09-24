@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 
 
-class DialogRequest(BaseModel):
-    user_id: str
+class GetAllFilenamesResponse(BaseModel):
+    filenames: list[str]
+
+
+class ChatRequest(BaseModel):
     session_id: str
-    query: str
+    user_message: str

@@ -1,33 +1,43 @@
 import os
-import docx2txt
-from app.config.environment import (
-    get_milvus_collection,
-    get_milvus_token,
-    get_milvus_uri,
-)
+import shutil
+import typing
+from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
+from app.model.pydantic_schema.helper_schemas import GetAllFilenamesResponse
 from app.util.embeddings_util import get_embeddings_with_backoff
+from app.util.file_util import extract_and_remove_blank_lines
 from datetime import datetime
 from fastapi import UploadFile
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pdfminer.high_level import extract_text
-from pymilvus import MilvusClient
 
 
-def persist_csv_file(uploadFile: UploadFile, user_id: str):
-    folder_path = os.path.join(os.getcwd(), "data")
-    file_path = os.path.join(folder_path, f"{user_id}.csv")
-    with open(file_path, "wb") as buffer:
-        buffer.write(uploadFile.file.read())
+_DATA_DIRECTORY_PATH = os.path.join(os.getcwd(), "data")
+
+
+def get_all_filenames_from_data_directory(user_id: int) -> GetAllFilenamesResponse:
+    folder_path = _DATA_DIRECTORY_PATH
+    if not os.path.exists(folder_path):
+        return []
+    local_files = os.listdir(folder_path)
+    local_filenames = [
+        f for f in local_files if os.path.isfile(os.path.join(folder_path, f))
+    ]
+    cloud_files = get_milvus_client().query(
+        collection_name=MILVUS_COLLECTION,
+        filter=f"(created_by == {user_id})",
+        output_fields=["filename"],
+    )
+    cloud_filenames = list({item["filename"] for item in cloud_files})
+    return GetAllFilenamesResponse(filenames=local_filenames + cloud_filenames)
 
 
 def process_and_persist_business_file(
     uploadFile: UploadFile,
-    user_id: str,
+    user_id: int,
     chunk_size: int = 500,
     chunk_overlap: int = 100,
-):
-    doc = create_document_from_file(uploadFile, user_id)
+) -> None:
+    doc = _create_document_from_file(uploadFile, user_id)
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -44,39 +54,32 @@ def process_and_persist_business_file(
             "filename": metadata["filename"],
             "text": text,
             "vector": vector,
+            "created_by": metadata["user_id"],
             "creation_time": metadata["creation_time"],
         }
         for text, metadata, vector in zip(text_list, metadata_list, vector_list)
     ]
-
-    client = MilvusClient(uri=get_milvus_uri(), token=get_milvus_token())
-    client.insert(get_milvus_collection(), list_of_rows)
+    get_milvus_client().insert(MILVUS_COLLECTION, list_of_rows)
 
 
-def create_document_from_file(uploadFile: UploadFile, user_id: str) -> list[Document]:
-    # Determine file type and process accordingly
-    if uploadFile.filename.endswith(".txt"):
-        raw_text = uploadFile.file.read().decode("utf-8")
-    elif uploadFile.filename.endswith(".pdf"):
-        raw_text = extract_text(uploadFile.file)
-    elif uploadFile.filename.endswith(".docx"):
-        raw_text = docx2txt.process(uploadFile.file)
-    else:
-        raise ValueError("Unsupported file type")
-    processed_text = remove_blank_lines(raw_text)
-    # Prepare the metadata
+def purge_data_directory() -> None:
+    shutil.rmtree(_DATA_DIRECTORY_PATH)
+    os.mkdir(_DATA_DIRECTORY_PATH)
+
+
+def store_file_in_data_directory(filename: str, file: typing.BinaryIO) -> None:
+    file_path = os.path.join(_DATA_DIRECTORY_PATH, filename)
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.read())
+
+
+def _create_document_from_file(uploadFile: UploadFile, user_id: int) -> list[Document]:
+    processed_text = extract_and_remove_blank_lines(
+        filename=uploadFile.filename, file=uploadFile.file
+    )
     metadata = {
         "filename": uploadFile.filename,
-        "creation_time": datetime.now().isoformat(),
+        "creation_time": datetime.now().replace(microsecond=0).isoformat(),
         "user_id": user_id,
     }
-
-    # Create a Document instance
     return Document(page_content=processed_text, metadata=metadata)
-
-
-def remove_blank_lines(input_str: str) -> str:
-    # Split the string into lines, filter out blank lines, and join the non-blank lines back into a string
-    lines = input_str.splitlines()
-    non_blank_lines = [line for line in lines if line.strip()]
-    return "\n".join(non_blank_lines)

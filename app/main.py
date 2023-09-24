@@ -2,15 +2,19 @@
 # uvicorn app.main:app --reload
 
 import logging
-from app.router import dashboard_router, data_visualization_router, helper_router
 from app.config import my_sql_db
+from app.logic import start_up_logic
+from app.router import (
+    dashboard_router,
+    data_visualization_router,
+    helper_router,
+    visitor_router,
+)
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-# Make sure .env is loaded before invoking
-load_dotenv()
 middleware = [
     Middleware(
         CORSMiddleware,
@@ -27,6 +31,13 @@ app = FastAPI(middleware=middleware)
 app.include_router(dashboard_router.router)
 app.include_router(data_visualization_router.router)
 app.include_router(helper_router.router)
+app.include_router(visitor_router.router)
+
+
+@app.on_event("startup")
+def startup_event():
+    load_dotenv()
+    start_up_logic.generate_embedding_for_scenarios()
 
 
 @app.get("/")

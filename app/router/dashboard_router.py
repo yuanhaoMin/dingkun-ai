@@ -21,7 +21,7 @@ class ChartPosition(BaseModel):
 
 
 class InteractiveRequest(BaseModel):
-    user_id: str
+    user_id: int
     session_id: str
     query: str
     role: str

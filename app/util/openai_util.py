@@ -44,66 +44,6 @@ def chat_completion_no_functions(messages: list[dict]) -> str:
                 continue
 
 
-class Conversation:
-    def __init__(self, prompt, num_of_round, function_map=None):
-        self.prompt = prompt
-        self.num_of_round = num_of_round
-        self.function_map = function_map or {}
-        self.messages = []
-        self.messages.append({"role": "system", "content": self.prompt})
-
-    def ask(self, question):
-        self.messages.append({"role": "user", "content": question})
-        ai_response = chat_completion_no_functions(self.messages)
-
-        self.messages.append({"role": "assistant", "content": ai_response})
-
-        if len(self.messages) > self.num_of_round * 2 + 1:
-            del self.messages[1:3]
-        return ai_response
-
-    def ask_functions(self, question, functions=None):
-        self.messages.append({"role": "user", "content": question})
-        ai_response = self.chat_session(functions)
-        self.messages.append({"role": "assistant", "content": ai_response})
-        # 保持会话长度，确保不超过指定的轮数
-        if len(self.messages) > self.num_of_round * 2 + 1:
-            del self.messages[1:3]
-        return ai_response
-
-    def save_messages_to_file(self, filename="temp.txt"):
-        with open(filename, "w", encoding="utf-8") as file:
-            for message in self.messages:
-                file.write(f"{message['role']}: {message['content']}\n")
-
-    def chat_session(self, functions=None):
-        while True:
-            response = chat_completion_with_functions(
-                self.messages, functions=functions
-            )
-            response = response.json()
-            if (
-                "finish_reason" in response
-                and response["finish_reason"] == "function_call"
-            ):
-                function_name = response["choices"][0]["message"]["function_call"][
-                    "name"
-                ]
-                arguments = eval(
-                    response["choices"][0]["message"]["function_call"]["arguments"]
-                )
-                func = self.function_map.get(function_name)
-                if func:
-                    function_result = func(**arguments)
-                    # 将功能的结果添加到消息列表中，以便GPT可以使用它作为上下文
-                    self.messages.append({"role": "system", "content": function_result})
-                else:
-                    raise ValueError(f"Function {function_name} not found")
-            else:
-                # 如果没有更多的功能调用，返回GPT的回复
-                return response["choices"][0]["message"]["content"]
-
-
 @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_with_functions(
     messages, functions=None, function_call=None, model="gpt-3.5-turbo"
