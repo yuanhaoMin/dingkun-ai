@@ -2,10 +2,10 @@ import os
 import shutil
 import typing
 from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
+from app.constant.path_constants import DATA_DIRECTORY_PATH
 from app.model.pydantic_schema.helper_schemas import GetAllFilenamesResponse
 from app.util.embeddings_util import get_embeddings_with_backoff
 from app.util.file_util import extract_and_remove_blank_lines
-from app.constant.path_constants import DATA_DIRECTORY_PATH
 from datetime import datetime
 from fastapi import UploadFile
 from langchain.schema import Document

@@ -1,5 +1,5 @@
 import logging
-from app.logic import helper_chat_logic, helper_data_logic, helper_file_logic
+from app.logic import helper_chat_logic, helper_file_logic
 from app.model.pydantic_schema.helper_schemas import (
     ChatWithDataRequest,
     ChatWithDocumentRequest,
@@ -19,17 +19,17 @@ ALLOWED_FILE_EXTENSIONS = ["doc", "docx", "txt", "pdf"]
 
 @router.post("/dialog/")
 def chat_with_document(request: ChatWithDocumentRequest):
-    ai_message = helper_chat_logic.chat(
+    result = helper_chat_logic.chat(
         session_id=request.session_id, user_message=request.user_message
     )
-    return {"ai_message": ai_message}
+    return {"result": result}
 
 
 @router.post("/analyse-data-file/")
 def chat_with_data(request: ChatWithDataRequest):
     if not request.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
-    ai_message = helper_data_logic.chat_with_data_file(
+    ai_message = helper_chat_logic.chat_with_data_file(
         filename=request.filename,
         user_message=request.user_message,
     )

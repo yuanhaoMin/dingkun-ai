@@ -14,16 +14,14 @@ Generate requirements.txt
 Install dependencies
     pip install --upgrade -r requirements.txt
 """
-import backup # For openai.embeddings_utils
 import dotenv
-import tabulate # For csv agent
-import matplotlib # For data report
-import plotly # For openai.embeddings_utils
-import pyarrow # For pandas
-import scipy # For openai.embeddings_utils
-import sklearn # For openai.embeddings_utils
+import tabulate  # For csv agent
+import matplotlib  # For data visualization
+import pandas  # For csv agent
+import pyarrow  # For pandas
 import tiktoken
 import uvicorn
+
 """
 Use specific version to solve conflict
 starlette==0.27.0

@@ -1,12 +1,20 @@
 import os
 import textwrap
-from app.constant.path_constants import CONSTANT_DIRECTORY_PATH
+from app.config.environment import get_openai_key
+from app.constant.path_constants import CONSTANT_DIRECTORY_PATH, DATA_DIRECTORY_PATH
 from app.model.conversation import Conversation
 from app.model.session_manager import SessionManager
 from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.util.file_util import create_prompt_from_template_file
-from app.util.openai_util import chat_completion_no_functions
+from app.util.openai_util import (
+    chat_completion_no_functions,
+    retrieve_langchain_completion_llm,
+)
+from fastapi import HTTPException
+from langchain.agents import create_csv_agent
+from langchain.agents.agent_types import AgentType
 from langchain.embeddings import OpenAIEmbeddings
+from typing import Union
 
 
 def get_scenarios() -> dict:
@@ -23,30 +31,48 @@ def get_scenario_file_path() -> str:
 def chat(session_id: str, user_message: str) -> str:
     conversation = _manage_session(session_id)
 
-    relevant_text = _get_relevant_text_from_query(
+    is_function_call, relevant_docs = _determine_query_result(
         query=user_message,
         milvus_collection_name=MILVUS_COLLECTION,
         max_docs=2,
         max_distance=0.38,
     )
+    # 如果是函数调用，直接返回函数调用结果
+    # TODO: 你之前说要加一些link和函数参数判断之类的东西, 这里可以加一个method去做
+    if is_function_call:
+        return relevant_docs
+    else:
+        relevant_text = "\n".join([doc["entity"]["text"] for doc in relevant_docs])
+        user_message_with_hint = _construct_user_message_with_hint(
+            user_message, relevant_text
+        )
 
-    user_message_with_hint = _construct_user_message_with_hint(
-        user_message, relevant_text
-    )
+        ai_message = chat_completion_no_functions(
+            [{"role": "user", "content": user_message_with_hint}]
+        )
+        # Only save user message, not document hint
+        conversation.messages.extend(
+            [
+                {"role": "user", "content": user_message},
+                {"role": "assistant", "content": ai_message},
+            ]
+        )
+        conversation.prune_messages()
 
-    ai_message = chat_completion_no_functions(
-        [{"role": "user", "content": user_message_with_hint}]
-    )
-    # Only save user message, not document hint
-    conversation.messages.extend(
-        [
-            {"role": "user", "content": user_message},
-            {"role": "assistant", "content": ai_message},
-        ]
-    )
-    conversation.prune_messages()
+        return ai_message
 
-    return ai_message
+
+def chat_with_data_file(filename: str, user_message: str) -> str:
+    file_path = os.path.join(DATA_DIRECTORY_PATH, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=400, detail=f"File {filename} not found.")
+    agent = create_csv_agent(
+        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        llm=retrieve_langchain_completion_llm(model_name="text-davinci-003"),
+        path=file_path,
+        verbose=True,
+    )
+    return agent.run(user_message + "\nReply in 中文")
 
 
 def _manage_session(session_id: str) -> Conversation:
@@ -61,24 +87,26 @@ def _manage_session(session_id: str) -> Conversation:
     )
 
 
-def _get_relevant_text_from_query(
+def _determine_query_result(
     query: str,
     milvus_collection_name: str,
     max_docs: int,
     max_distance: float,
-) -> str:
+) -> tuple[bool, dict]:
     embedded_user_message = OpenAIEmbeddings().embed_query(query)
     response = get_milvus_client().search(
         collection_name=milvus_collection_name,
         data=[embedded_user_message],
         limit=5,
-        output_fields=["text", "distance"],
+        output_fields=["text", "distance", "action", "route", "target"],
     )
-    # Filter out documents with a distance < max_distance
     filtered_docs = [doc for doc in response[0] if doc["distance"] < max_distance]
-    # Select up to max_docs of the filtered documents
-    selected_docs = filtered_docs[: max_docs - 1]
-    return "\n".join([doc["entity"]["text"] for doc in selected_docs])
+    # The most relevant document is function call
+    if filtered_docs and "route" in filtered_docs[0]["entity"]:
+        return True, filtered_docs[0]["entity"]
+    # Otherwise, return the most relevant documents
+    else:
+        return False, filtered_docs[: max_docs - 1]
 
 
 def _construct_user_message_with_hint(user_message: str, relevant_text: str) -> str:

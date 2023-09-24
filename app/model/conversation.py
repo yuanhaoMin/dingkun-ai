@@ -18,8 +18,3 @@ class Conversation:
     def prune_messages(self):
         if len(self.messages) > self.num_of_rounds * 2:
             del self.messages[1:3]
-
-    def save_messages_to_file(self, filename="temp.txt"):
-        with open(filename, "w", encoding="utf-8") as file:
-            for message in self.messages:
-                file.write(f"{message['role']}: {message['content']}\n")

@@ -4,7 +4,7 @@ from app.config.environment import get_openai_key
 from openai.embeddings_utils import get_embeddings, get_embedding, cosine_similarity
 
 
-def generate_and_save_embeddings(file_path: str, scenarios: dict):
+def generate_and_save_embeddings_locally(file_path: str, scenarios: dict):
     embedded_scenarios = {}
     for scenario_name, text in scenarios.items():
         embedded_scenarios[scenario_name] = [
@@ -22,7 +22,7 @@ def generate_and_save_embeddings(file_path: str, scenarios: dict):
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=5)
-def get_embeddings_with_backoff(text_list, batch_size=100):
+def get_embeddings_with_backoff(text_list, batch_size=100) -> list[list[float]]:
     all_embeddings = []
     total_size = len(text_list)
     for i in range(0, total_size, batch_size):
