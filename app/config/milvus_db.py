@@ -8,5 +8,13 @@ from pymilvus import MilvusClient
 MILVUS_COLLECTION = get_milvus_collection()
 
 
+_milvus_client_instance = None
+
+
 def get_milvus_client() -> MilvusClient:
-    return MilvusClient(uri=get_milvus_uri(), token=get_milvus_token())
+    global _milvus_client_instance
+    if _milvus_client_instance is None:
+        _milvus_client_instance = MilvusClient(
+            uri=get_milvus_uri(), token=get_milvus_token()
+        )
+    return _milvus_client_instance
