@@ -1,7 +1,7 @@
 import asyncio
 import json
-from app.constant.function import data_visualization_functions
-from app.constant.json import data_visualization_jsons
+from app.constant.function import data_visualization_function_call
+from app.constant.function import data_visualization_chart_config
 from app.util.time_utll import get_current_date_and_day
 from app.util.openai_util import (
     chat_completion_with_functions,
@@ -15,7 +15,7 @@ async def get_chart_and_function(user_message) -> tuple:
         user_message
     )
     determine_chart_config_messages = create_chart_config_messages(
-        user_message, data_visualization_jsons.chart
+        user_message, data_visualization_chart_config.chart
     )
 
     (
@@ -27,7 +27,7 @@ async def get_chart_and_function(user_message) -> tuple:
                 chat_completion_with_functions,
                 [
                     determine_function_call_messages,
-                    data_visualization_functions.front_end_functions,
+                    data_visualization_function_call.front_end_functions,
                 ],
             ),
             (chat_completion_no_functions, [determine_chart_config_messages]),

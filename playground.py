@@ -1,3 +1,13 @@
-print(
-    "Use the following pieces of context to answer the question at the end.\nIf you don't know the answer, just say that you don't know, don't try to make up an answer.\nKeep the answer concise as possible.\nContext: ```的分组去提前改好相应的配置，提高整个生产的效率。\n测试工程师：\n测试工程师根据产品质量要求、质检相关规定和标准，对生产过程进行把控，确保\n产品符合交付标准。\n情况说明：在目前公司自己负责组装生产的环境下，所有组装好的要入库的产品必须全\n部继续通讯距离的测试，不符合要求的直接返回硬件部门做维修。如遇到生产量比较大的情\n况下，但无项目需求的情况下，可以分批测试减缓测试压力。\n仓管：\n1、准备生产物料（电子料、包装材料、配件）；\n4\n2、生产过程中支撑工作；\n3、入库时，对包装和产品完整性进行检测，确保产品数量准备和齐全；\n4、生产文档归类管理并及时更新 ERP 系统。\n仓管按照仓储管理规范进行产品入库并做好库存管理，对仓储管理数据准确性负责。在\n录入 erp 系统时，标准产品的录入只接收完整的所有配件齐全的情况下做入库，在入库前需\n要仔细检查所有的产品是否符合入库要求。涉及成品交货时需检查包装是否有问题，确保出\n库产品包装及配件完整。\n五、制度发布与定期审视\n本制度为生产入库管理主流程，生产内部具体管理细则由部门负责人制定。本制度由商```\nQuestion: 测试工程师\nReply in 中文"
-)
+import os
+from pymilvus import MilvusClient
+from app.constant.function.helper_navigation import functions
+
+
+def upload_helper_navigation_functions():
+    client = MilvusClient(
+        uri=os.environ.get("MILVUS_URI"), token=os.environ.get("MILVUS_TOKEN")
+    )
+    descriptions = [item["description"] for item in functions["rows"]]
+
+
+upload_helper_navigation_functions()

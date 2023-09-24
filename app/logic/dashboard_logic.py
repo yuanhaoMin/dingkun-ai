@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import os
+from app.constant.path_constants import CONSTANT_DIRECTORY_PATH
 from app.constant.schema.dashboard_schemas import (
     information_extraction_schema,
     table_data_time_and_pagination_schema,
@@ -39,7 +40,7 @@ def get_scenarios():
 
 def get_scenario_file_path():
     return os.path.join(
-        os.getcwd(), "app", "constant", "dashboard_scenarios_embeddings.parquet"
+        CONSTANT_DIRECTORY_PATH, "dashboard_scenarios_embeddings.parquet"
     )
 
 

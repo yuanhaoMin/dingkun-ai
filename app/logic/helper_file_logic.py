@@ -5,17 +5,15 @@ from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.model.pydantic_schema.helper_schemas import GetAllFilenamesResponse
 from app.util.embeddings_util import get_embeddings_with_backoff
 from app.util.file_util import extract_and_remove_blank_lines
+from app.constant.path_constants import DATA_DIRECTORY_PATH
 from datetime import datetime
 from fastapi import UploadFile
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
-_DATA_DIRECTORY_PATH = os.path.join(os.getcwd(), "data")
-
-
 def get_all_filenames_from_data_directory(user_id: int) -> GetAllFilenamesResponse:
-    folder_path = _DATA_DIRECTORY_PATH
+    folder_path = DATA_DIRECTORY_PATH
     if not os.path.exists(folder_path):
         return []
     local_files = os.listdir(folder_path)
@@ -63,12 +61,12 @@ def process_and_persist_business_file(
 
 
 def purge_data_directory() -> None:
-    shutil.rmtree(_DATA_DIRECTORY_PATH)
-    os.mkdir(_DATA_DIRECTORY_PATH)
+    shutil.rmtree(DATA_DIRECTORY_PATH)
+    os.mkdir(DATA_DIRECTORY_PATH)
 
 
 def store_file_in_data_directory(filename: str, file: typing.BinaryIO) -> None:
-    file_path = os.path.join(_DATA_DIRECTORY_PATH, filename)
+    file_path = os.path.join(DATA_DIRECTORY_PATH, filename)
     with open(file_path, "wb") as buffer:
         buffer.write(file.read())
 

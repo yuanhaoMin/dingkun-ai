@@ -1,6 +1,6 @@
 import json
 import logging
-from app.model import session_manager
+from app.model.session_manager import SessionManager
 from app.util.json_util import fix_and_parse_json
 from app.util.file_util import create_prompt_from_template_file
 from app.util.time_utll import get_current_date_and_day
@@ -11,6 +11,7 @@ from typing import List
 def determine_registration_function_call(
     session_id: str, usermessage: str, department_names: List[str], history_data=None
 ) -> str:
+    session_manager = SessionManager()
     department_str = ",".join(department_names) if department_names else ""
 
     system_message = _prepare_system_message(department_str)

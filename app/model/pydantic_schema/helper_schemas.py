@@ -5,6 +5,11 @@ class GetAllFilenamesResponse(BaseModel):
     filenames: list[str]
 
 
-class ChatRequest(BaseModel):
+class ChatWithDocumentRequest(BaseModel):
     session_id: str
+    user_message: str
+
+
+class ChatWithDataRequest(BaseModel):
+    filename: str
     user_message: str

@@ -1,0 +1,73 @@
+functions = {
+    "rows": [
+        {
+            "description": "查看事故发生前一刻的人员分布图",
+            "action": "activate",
+            "target": "emergency",
+            "attribute": "distribution_before_accident",
+            "route": "Trajectory_Management_Emergency_Response",
+        },
+        {
+            "description": "查询人员的历史轨迹",
+            "action": "display",
+            "target": "person",
+            "attribute": "historical_trajectory",
+            "route": "Trajectory_Management_Historical",
+            "name": None,
+            "time_start": None,
+            "time_end": None,
+        },
+        {
+            "description": "查询人员的最终位置",
+            "action": "view",
+            "target": "person",
+            "attribute": "final_position",
+            "route": "Track",
+            "name": None,
+        },
+        {
+            "description": "只想要显示人员轨迹信息",
+            "action": "display",
+            "target": "map",
+            "attribute": "person_trajectory",
+            "route": "Track",
+        },
+        {
+            "description": "我想看看某个人员的详细信息",
+            "action": "view",
+            "target": "person",
+            "attribute": "details",
+            "route": "Track",
+            "name": None,
+        },
+        {
+            "description": "查看特定人员实时轨迹",
+            "action": "view",
+            "target": "person",
+            "attribute": "real_time",
+            "route": "Track",
+            "name": None,
+        },
+        {
+            "description": "查看在线人员列表",
+            "action": "view",
+            "target": "person",
+            "attribute": "online_list",
+            "route": "Track",
+        },
+        {
+            "description": "查看离线人员列表",
+            "action": "view",
+            "target": "person",
+            "attribute": "offline_list",
+            "route": "Track",
+        },
+        {
+            "description": "查看在线车辆列表",
+            "action": "view",
+            "target": "vehicle",
+            "attribute": "online_list",
+            "route": "Track",
+        },
+    ]
+}

@@ -6,6 +6,7 @@ from app.config.my_sql_db import get_db
 from app.model.pydantic_schema.data_visualization_schemas import VisualizeInSVGResponse
 from app.util.openai_util import chat_completion_no_functions
 from app.util.file_util import create_prompt_from_template_file
+from app.util.sql_util import execute_sql
 from app.util.time_utll import timeit, get_current_date_and_day
 from fastapi import HTTPException
 
@@ -13,16 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 def visualize_in_svg(input_text: str) -> str:
-    """
-    基于用户输入生成数据报告。
-
-    参数:
-    - input_text: 用户提供的自然语言输入。
-
-    返回:
-    - SVG数据。
-    """
-
     # 获取当前日期和星期
     current_date, day_of_week = get_current_date_and_day()
 
@@ -82,18 +73,6 @@ def visualize_in_svg(input_text: str) -> str:
 def natural_language_to_sql(
     user_message: str, table_schema: str, current_date: str, day_of_week: str
 ) -> str:
-    """
-    自然语言转换为SQL查询的方法。
-
-    参数:
-    - text: 用户提供的自然语言输入。
-    - table_schema: SQLAlchemy模型描述的表结构。
-    - current_date: 当前日期。
-    - day_of_week: 当前星期。
-
-    返回:
-    - 生成的SQL查询。
-    """
     # 使用提示词模板并替换其中的内容
     replacements = {
         "table_schema:": table_schema,
@@ -113,15 +92,6 @@ def natural_language_to_sql(
 
 @timeit
 def execute_sql_query(sql_query: str) -> list:
-    """
-    根据提供的SQL查询执行查询并返回结果。
-
-    参数:
-    - sql_query: 要执行的SQL查询。
-
-    返回:
-    - 查询结果作为字典列表。
-    """
     db = next(get_db())  # 获取数据库会话
     try:
         results = execute_sql(db, sql_query)
@@ -134,17 +104,6 @@ def execute_sql_query(sql_query: str) -> list:
 def generate_code_for_svg(
     input_text: str, query_result: dict, current_date: str, day_of_week: str
 ) -> str:
-    """
-    根据用户的输入和查询结果, 通过AI生成可运行的数据可视化代码。
-
-    参数:
-    - input_text: 用户提供的自然语言输入。
-    - query_result: SQL查询返回的数据。
-
-    返回:
-    - 可运行的数据可视化代码。
-    """
-
     # 使用提示词模板并替换其中的内容
     replacements = {
         "current_date": current_date,  # 使用Python的date.today()获取今天的日期
