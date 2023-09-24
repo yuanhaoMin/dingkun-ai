@@ -11,6 +11,8 @@ from typing import List
 def determine_registration_function_call(
     session_id: str, usermessage: str, department_names: List[str], history_data=None
 ) -> str:
+    # 测试中发现如果帮助中心和访客登记同时开启, 会话会混淆. 需要保证这里是临时会话
+    temp_session_id = session_id + "_temp"
     session_manager = SessionManager()
     department_str = ",".join(department_names) if department_names else ""
 
@@ -22,7 +24,7 @@ def determine_registration_function_call(
             usermessage = f"Current situation: {history_data}. " + usermessage
 
     conversation = session_manager.retrieve_or_create_session_conversation(
-        session_id=session_id, system_message=system_message
+        session_id=temp_session_id, system_message=system_message
     )
 
     for _ in range(3):  # 3 attempts
@@ -31,7 +33,7 @@ def determine_registration_function_call(
         )
         try:
             parsed_json = fix_and_parse_json(ai_message)
-            session_manager.remove_session(session_id)
+            session_manager.remove_session(temp_session_id)
             return parsed_json
         except json.JSONDecodeError as e:
             logging.error(f"Failed to parse JSON. AI's response was: {ai_message}")

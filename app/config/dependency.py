@@ -14,11 +14,15 @@ Generate requirements.txt
 Install dependencies
     pip install --upgrade -r requirements.txt
 """
+import backup # For embedding cosine similarity
 import dotenv
-import tabulate  # For csv agent
 import matplotlib  # For data visualization
 import pandas  # For csv agent
-import pyarrow  # For pandas
+import plotly # For openai.embeddings_utils
+import pyarrow # For pandas
+import scipy # For openai.embeddings_utils
+import sklearn # For openai.embeddings_utils
+import tabulate  # For csv agent
 import tiktoken
 import uvicorn
 
@@ -30,6 +34,5 @@ Manually paste the following dependency into the requirements.txt file:
 jsonschema==4.19.0
 mysqlclient==2.2.0
 pdfminer.six==20221105
-python_docx==0.8.11
 python-multipart==0.0.6
 """
