@@ -17,16 +17,14 @@ def get_all_filenames_from_data_directory(user_id: int) -> GetAllFilenamesRespon
     if not os.path.exists(folder_path):
         return []
     local_files = os.listdir(folder_path)
-    local_filenames = [
-        f for f in local_files if os.path.isfile(os.path.join(folder_path, f))
-    ]
+    local_filenames = {f for f in local_files if os.path.isfile(os.path.join(folder_path, f))}
     cloud_files = get_milvus_client().query(
         collection_name=MILVUS_COLLECTION,
-        filter=f"(created_by == {user_id})",
+        filter=f"(filename != '')",
         output_fields=["filename"],
     )
-    cloud_filenames = list({item["filename"] for item in cloud_files})
-    return GetAllFilenamesResponse(filenames=local_filenames + cloud_filenames)
+    cloud_filenames = {item["filename"] for item in cloud_files if "filename" in item}
+    return GetAllFilenamesResponse(filenames=local_filenames.union(cloud_filenames))
 
 
 def process_and_persist_business_file(
