@@ -69,3 +69,46 @@ functions = [
         "route": "Track",
     },
 ]
+
+
+name_time_start_time_end_extract = [
+    {
+        "name": "extracting",
+        "description": "extracting",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "person name"
+                },
+                "time_start": {
+                    "type": "string",
+                    "description": "Start time in the format '2023-09-20 11:00'."
+                },
+                "time_end": {
+                    "type": "string",
+                    "description": "End time in the format '2023-09-20 12:00'. '"
+                }
+            },
+            "required": ["name", "time_start", "time_end"]
+        }
+    }
+]
+
+name_extract = [
+    {
+        "name": "extracting",
+        "description": "extracting",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                }
+            },
+            "required": ["file_path", "query"]
+        }
+    }
+]
+

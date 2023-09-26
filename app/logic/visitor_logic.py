@@ -9,7 +9,7 @@ from typing import List
 
 
 def determine_registration_function_call(
-    session_id: str, usermessage: str, department_names: List[str], history_data=None
+    session_id: str, user_message: str, department_names: List[str], history_data=None
 ) -> str:
     # 测试中发现如果帮助中心和访客登记同时开启, 会话会混淆. 需要保证这里是临时会话
     temp_session_id = session_id + "_temp"
@@ -21,7 +21,7 @@ def determine_registration_function_call(
     if history_data:
         parsed_history_data = json.loads(history_data)
         if _contains_non_null_values(parsed_history_data):
-            usermessage = f"Current situation: {history_data}. " + usermessage
+            user_message = f"Current situation: {history_data}. " + user_message
 
     conversation = session_manager.retrieve_or_create_session_conversation(
         session_id=temp_session_id, system_message=system_message
@@ -29,7 +29,7 @@ def determine_registration_function_call(
 
     for _ in range(3):  # 3 attempts
         ai_message = conversation.ask(
-            usermessage + """(Only return...Correct comma placement.) """
+            user_message + """(Only return...Correct comma placement.) """
         )
         try:
             parsed_json = fix_and_parse_json(ai_message)
@@ -65,3 +65,6 @@ def _contains_non_null_values(data: any) -> bool:
         return any(_contains_non_null_values(item) for item in data)
     else:
         return data is not None
+
+
+

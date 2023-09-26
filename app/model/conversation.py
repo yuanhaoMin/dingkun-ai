@@ -18,3 +18,15 @@ class Conversation:
     def prune_messages(self):
         if len(self.messages) > self.num_of_rounds * 2:
             del self.messages[1:3]
+
+    def get_latest_user_message(self):
+        for message in reversed(self.messages):
+            if message['role'] == 'user':
+                return message['content']
+        return None
+
+    def get_latest_assistant_message(self):
+        for message in reversed(self.messages):
+            if message['role'] == 'assistant':
+                return message['content']
+        return None

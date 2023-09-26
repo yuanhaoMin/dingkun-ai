@@ -1,8 +1,8 @@
 import logging
 import requests
+from langchain.chat_models import ChatOpenAI
 from app.config.environment import get_openai_key
 from fastapi import HTTPException
-from langchain.llms import OpenAI
 from openai import ChatCompletion
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
@@ -72,7 +72,7 @@ def chat_completion_with_functions(
 
 
 def retrieve_langchain_completion_llm(model_name: str):
-    return OpenAI(
+    return ChatOpenAI(
         max_retries=3,
         model_name=model_name,
         openai_api_key=get_openai_key(),

@@ -123,15 +123,6 @@ def fix_and_parse_json(json_str: str) -> Union[str, Dict[Any, Any], list]:
     """Fix and parse JSON string"""
     json_str = json_str.replace("\t", "")
 
-    # 尝试检测是否有多个 JSON 对象
-    trimmed_json_str = json_str.strip()
-    if trimmed_json_str.count("{") > 1 and trimmed_json_str[0] != "[":
-        try:
-            fixed_multiple_objects = "[" + trimmed_json_str + "]"
-            return json.loads(fixed_multiple_objects)
-        except json.JSONDecodeError:
-            pass  # 继续尝试其他修复方式
-
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as _:

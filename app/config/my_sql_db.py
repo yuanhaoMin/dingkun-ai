@@ -3,8 +3,7 @@ from app.config.environment import get_my_sql_url
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, MetaData
-
+from sqlalchemy import create_engine, MetaData, text
 
 load_dotenv()
 SQLALCHEMY_DATABASE_URL = get_my_sql_url()
