@@ -1,82 +1,70 @@
 import json
-
-from app.db.SessionManager import SessionManager
-from app.util.json_util import fix_and_parse_json
-from app.util.openai_util import completion, Conversation
-from app.util.text_util import create_prompt_from_template_file
-from datetime import datetime, timedelta
-from typing import List
 import logging
+from app.model.session_manager import SessionManager
+from app.util.json_util import fix_and_parse_json
+from app.util.file_util import create_prompt_from_template_file
 from app.util.time_utll import get_current_date_and_day
-
-MAX_ATTEMPTS = 3
-
-session_manager = SessionManager()
+from fastapi import HTTPException
+from typing import List
 
 
-def determine_registration_function_call(sessionId: str, text: str, department_names: List[str],
-                                         history_data=None) -> str:
-    if not department_names:
-        department_names = []
-    current_date, day_of_week = get_current_date_and_day()
-    departments_str = ",".join(department_names)
-    replacements = {"current_date:": current_date,
-                    "day_of_week:": day_of_week,
-                    "departments:": departments_str
-                    }
-    prompt = create_prompt_from_template_file(
-        filename="visitor_register_prompts", replacements=replacements
-    )
+def determine_registration_function_call(
+    session_id: str, user_message: str, department_names: List[str], history_data=None
+) -> str:
+    # 测试中发现如果帮助中心和访客登记同时开启, 会话会混淆. 需要保证这里是临时会话
+    temp_session_id = session_id + "_temp"
+    session_manager = SessionManager()
+    department_str = ",".join(department_names) if department_names else ""
+
+    system_message = _prepare_system_message(department_str)
+
     if history_data:
         parsed_history_data = json.loads(history_data)
-        if contains_non_null_values(parsed_history_data):
-            text = f"Current situation: {history_data}. " + text
+        if _contains_non_null_values(parsed_history_data):
+            user_message = f"Current situation: {history_data}. " + user_message
 
-    session = session_manager.get_session(sessionId)
-    if not session:
-        conversation = Conversation(prompt, num_of_round=5)
-        session_manager.add_or_update_session(sessionId, conversation)
-        session = session_manager.get_session(sessionId)
-    else:
-        conversation = session["conversation"]
+    conversation = session_manager.retrieve_or_create_session_conversation(
+        session_id=temp_session_id, system_message=system_message
+    )
 
-    attempts = 0
-    while attempts < MAX_ATTEMPTS:
-        response = conversation.ask(text + '''(Only return the specified JSON array relevant to the context, even if 
-        user requests do not align with the pre-defined scenario. Even without accompanying personnel, return the 
-        complete array with both objects. Retain the previously entered JSON unless explicitly changed by the user. 
-        Ensure: 1. Proper bracket pairing: Each '{' matches with '}', and each '[' with ']'. 2. Correct comma 
-        placement: Ensure no trailing comma after the last element or key-value pair.) '''
-                                    )
-        conversation.save_messages_to_file()
+    for _ in range(3):  # 3 attempts
+        ai_message = conversation.ask(
+            user_message + """(Only return...Correct comma placement.) """
+        )
         try:
-            # 尝试修复和解析 JSON
-            fixed_response = fix_and_parse_json(response)
-            # 保存这次的响应作为下一次的"之前的响应"
-            session["previous_response"] = fixed_response
-
-            return fixed_response  # 如果成功，直接返回修复后的 JSON
+            parsed_json = fix_and_parse_json(ai_message)
+            session_manager.remove_session(temp_session_id)
+            return parsed_json
         except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse JSON. AI's response was: {response}")
-            # 如果失败，捕获异常并告知 AI
-            text = "Please check your JSON format and only reply with valid JSON data."
-            conversation.ask(text)
-            attempts += 1
+            logging.error(f"Failed to parse JSON. AI's response was: {ai_message}")
+            conversation.ask(
+                f"Failed to parse JSON with error: \n{e}\nPlease check your JSON format and only reply with valid JSON data"
+            )
+    raise HTTPException(
+        status_code=500,
+        detail="Failed to parse JSON after 3 attempts. Please check your JSON format and only reply with valid JSON data",
+    )
 
-    # 超过最大尝试次数，返回 None
-    return {}
+
+def _prepare_system_message(departments_str: str) -> str:
+    current_date, day_of_week = get_current_date_and_day()
+    replacements = {
+        "current_date:": current_date,
+        "day_of_week:": day_of_week,
+        "departments:": departments_str,
+    }
+    return create_prompt_from_template_file(
+        filename="visitor_register_prompt", replacements=replacements
+    )
 
 
-def contains_non_null_values(data):
+def _contains_non_null_values(data: any) -> bool:
     if isinstance(data, dict):
-        for key, value in data.items():
-            if contains_non_null_values(value):
-                return True
+        return any(_contains_non_null_values(value) for value in data.values())
     elif isinstance(data, list):
-        for item in data:
-            if contains_non_null_values(item):
-                return True
+        return any(_contains_non_null_values(item) for item in data)
     else:
-        if data is not None:
-            return True
-    return False
+        return data is not None
+
+
+

@@ -1,33 +1,15 @@
 import json
+import pandas as pd
 import os
-from app.knowledge.dashboard_dict import information_extraction_schema,  \
-    table_data_time_and_pagination_schema
-from app.logic.helper_logic import FILE_PATH
-from app.util.embeddings_util import load_situations_embeddings, judge_message_category, generate_and_save_embeddings
-from app.util.openai_util import chat_completion_request
+from app.constant.path_constants import CONSTANT_DIRECTORY_PATH
+from app.constant.schema.dashboard_schemas import (
+    information_extraction_schema,
+    table_data_time_and_pagination_schema,
+)
+from app.config.environment import get_openai_key
+from app.util.openai_util import chat_completion_with_functions
 from app.util.time_utll import get_current_date_and_day, get_current_datetime
-
-# 定义文本常量
-TEXT_CONSTANTS = {
-    "weekly_data": "近一周数据",
-    "online_person_details": "在线人员详情",
-    "fence_alarm_trend": "告警趋势",
-    "central_map": "中心地图",
-    "patrol_trend": "巡检趋势",
-    "work_card_hat_bracelet_pie_chart": "工牌工帽手环环形图",
-    "visitor_number": "访客数量",
-    "patrol_task": "巡检任务",
-    "alarm_list": "告警列表"
-}
-
-# 定义文件路径
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-FILE_PATH = os.path.join(CURRENT_DIR, "..", "constant", "text_constants_embeddings.parquet")
-# 如果文件不存在，则生成并保存embeddings
-if not os.path.exists(FILE_PATH):
-    generate_and_save_embeddings(TEXT_CONSTANTS, FILE_PATH)
-
-current_date, day_of_week = get_current_date_and_day()
+from openai.embeddings_utils import get_embedding, cosine_similarity
 
 chart_positions = """
 近一周数据:1
@@ -42,26 +24,51 @@ chart_positions = """
 """
 
 
+def get_scenarios():
+    return {
+        "weekly_data": "近一周数据",
+        "online_person_details": "在线人员详情",
+        "fence_alarm_trend": "告警趋势",
+        "central_map": "中心地图",
+        "patrol_trend": "巡检趋势",
+        "work_card_hat_bracelet_pie_chart": "工牌工帽手环环形图",
+        "visitor_number": "访客数量",
+        "patrol_task": "巡检任务",
+        "alarm_list": "告警列表",
+    }
+
+
+def get_scenario_file_path():
+    return os.path.join(
+        CONSTANT_DIRECTORY_PATH, "dashboard_scenarios_embeddings.parquet"
+    )
+
+
 def extract_time_and_page_information(query: str) -> dict:
     current_time = get_current_datetime()
-    prompt = f'''
+    prompt = f"""
         You need to help me find the requirements for the start time, end time, and pagination of the table data that the user needs, 
         with the time being accurate to hours, minutes, and seconds, like that 'YYYY-MM-DD HH:mm:ss'.
         The current time: {current_time}
-    '''
+    """
 
     messages = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": query}
+        {"role": "user", "content": query},
     ]
 
     max_retries = 3
     for _ in range(max_retries):
         # 发送请求
-        res = chat_completion_request(messages, functions=table_data_time_and_pagination_schema ,
-                                      function_call={"name": "get_table_data_time_and_pagination"})
+        res = chat_completion_with_functions(
+            messages,
+            functions=table_data_time_and_pagination_schema,
+            function_call={"name": "get_table_data_time_and_pagination"},
+        )
         if res:
-            arguments_data = json.loads(res.json()["choices"][0]["message"]["function_call"]["arguments"])
+            arguments_data = json.loads(
+                res.json()["choices"][0]["message"]["function_call"]["arguments"]
+            )
             # 解析arguments中的数据，并根据其存在性决定是否包含在结果中
             result = {
                 "start_time": arguments_data.get("start_time", ""),
@@ -78,7 +85,9 @@ def extract_time_and_page_information(query: str) -> dict:
         "listRows": "",
     }
 
-    arguments_data = json.loads(res.json()["choices"][0]["message"]["function_call"]["arguments"])
+    arguments_data = json.loads(
+        res.json()["choices"][0]["message"]["function_call"]["arguments"]
+    )
 
     # 解析arguments中的数据，并根据其存在性决定是否包含在结果中
     result = {
@@ -92,6 +101,7 @@ def extract_time_and_page_information(query: str) -> dict:
 
 
 def extract_chart_information(chart_positions: str, query: str) -> dict:
+    current_date, day_of_week = get_current_date_and_day()
     # 格式化提示词
     prompt = f'''
     Extract and save the relevant entities mentioned in the following passage together with their properties. 
@@ -113,16 +123,21 @@ def extract_chart_information(chart_positions: str, query: str) -> dict:
     # 创建消息列表
     messages = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": query}
+        {"role": "user", "content": query},
     ]
 
     max_retries = 3
     for _ in range(max_retries):
         # 发送请求
-        res = chat_completion_request(messages, functions=information_extraction_schema,
-                                      function_call={"name": "information_extraction"})
+        res = chat_completion_with_functions(
+            messages,
+            functions=information_extraction_schema,
+            function_call={"name": "information_extraction"},
+        )
         if res:
-            arguments_data = json.loads(res.json()["choices"][0]["message"]["function_call"]["arguments"])
+            arguments_data = json.loads(
+                res.json()["choices"][0]["message"]["function_call"]["arguments"]
+            )
 
             # 解析arguments中的数据，并根据其存在性决定是否包含在结果中
             result = {
@@ -141,7 +156,9 @@ def extract_chart_information(chart_positions: str, query: str) -> dict:
         "newTarget": "",
     }
 
-    arguments_data = json.loads(res.json()["choices"][0]["message"]["function_call"]["arguments"])
+    arguments_data = json.loads(
+        res.json()["choices"][0]["message"]["function_call"]["arguments"]
+    )
 
     # 解析arguments中的数据，并根据其存在性决定是否包含在结果中
     result = {
@@ -154,17 +171,9 @@ def extract_chart_information(chart_positions: str, query: str) -> dict:
     return result
 
 
-# 定义一个函数来判断与给定常量的相似性
-def get_most_similar_constant(message, text_constants=TEXT_CONSTANTS, file_path=FILE_PATH):
-    # 加载持久化的embeddings
-    situations = load_situations_embeddings(TEXT_CONSTANTS, FILE_PATH)
-
-    # 判断消息与给定常量的相似性
-    category = judge_message_category(message, TEXT_CONSTANTS, FILE_PATH)
-    return text_constants[category]
-
-
-def handle_extracted_information(chart_positions: str, extracted_info: dict, query: str) -> dict:
+def handle_extracted_information(
+    chart_positions: str, extracted_info: dict, query: str
+) -> dict:
     target = extracted_info.get("target", "")
 
     if target == "" or target == "chart:position":
@@ -172,11 +181,13 @@ def handle_extracted_information(chart_positions: str, extracted_info: dict, que
         return extracted_info
 
     # 转换 chart_positions 为字典方便查询
-    chart_positions_dict = dict([item.split(":") for item in chart_positions.strip().split("\n")])
+    chart_positions_dict = dict(
+        [item.split(":") for item in chart_positions.strip().split("\n")]
+    )
 
     # 如果 target 不在 chart_positions 里
     if target not in chart_positions_dict:
-        matched_constant = get_most_similar_constant(target)
+        matched_constant = get_most_similar_scenario(target)
         extracted_info["matched_constant"] = matched_constant
         target = matched_constant  # 更新 target 为匹配到的常量
 
@@ -188,4 +199,47 @@ def handle_extracted_information(chart_positions: str, extracted_info: dict, que
     return extracted_info
 
 
+# 定义一个函数来判断与给定常量的相似性
+def get_most_similar_scenario(message: str):
+    scenarios = get_scenarios()
+    embedded_scenarios = load_and_verify_embedded_scenarios(
+        embedded_scenario_file_path=get_scenario_file_path(),
+        expected_scenarios=scenarios,
+    )
+    scenario_name = determine_best_matching_scenario(
+        message=message, embedded_scenarios=embedded_scenarios
+    )
+    return scenarios[scenario_name]
 
+
+def load_and_verify_embedded_scenarios(
+    embedded_scenario_file_path: str, expected_scenarios: dict
+) -> dict:
+    df = pd.read_parquet(embedded_scenario_file_path)
+    df["TextAndEmbedding"] = df["TextAndEmbedding"].apply(eval)
+    scenarios_with_text_and_embedding = dict(
+        zip(df["Scenario"], df["TextAndEmbedding"])
+    )
+
+    for scenario_name, (
+        loaded_scenario_text,
+        _,
+    ) in scenarios_with_text_and_embedding.items():
+        assert (
+            loaded_scenario_text == expected_scenarios[scenario_name]
+        ), f"Loaded scenario text '{loaded_scenario_text}' does not match expected '{expected_scenarios[scenario_name]}'"
+    return {k: v[1] for k, v in scenarios_with_text_and_embedding.items()}
+
+
+def determine_best_matching_scenario(embedded_scenarios: dict, message: str):
+    embedded_message = get_embedding(
+        message, engine="text-embedding-ada-002", api_key=get_openai_key()
+    )
+
+    best_match_scenario_name = max(
+        embedded_scenarios.keys(),
+        key=lambda scenario_name: cosine_similarity(
+            embedded_message, embedded_scenarios[scenario_name]
+        ),
+    )
+    return best_match_scenario_name
