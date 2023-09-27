@@ -80,6 +80,16 @@ functions = [
   },
   {
     "route": "Screen",
+    "operation": "navigate_to_Screen",
+    "text": "跳转到数据大屏"
+  },
+  {
+    "route": "Track",
+    "operation": "navigate_to_Track",
+    "text": "跳转到轨迹页面"
+  },
+  {
+    "route": "Screen",
     "operation": "next_page",
     "text": "下一页",
   },
