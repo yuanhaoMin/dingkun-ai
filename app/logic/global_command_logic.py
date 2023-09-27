@@ -18,6 +18,9 @@ def parse_text_command(text: str, route: str):
 
     function_description = determine_extraction_function_based_on_missing_data(entity)
 
+    if function_description is None:
+        return entity
+
     updated_entity = update_missing_json_values_with_llm(
         json_data=entity,
         question=text,
