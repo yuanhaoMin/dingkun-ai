@@ -98,5 +98,10 @@ functions = [
     "route": "Track",
     "operation": "untrack_individual",
     "text": "取消追踪人员",
+  },
+  {
+    "route": "Screen",
+    "operation": "close_chart",
+    "text": "关闭列表",
   }
 ]
