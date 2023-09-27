@@ -1,6 +1,7 @@
 import os
 import shutil
 import typing
+import chardet
 from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.constant.path_constants import DATA_DIRECTORY_PATH
 from app.model.pydantic_schema.helper_schemas import GetAllFilenamesResponse
@@ -28,10 +29,10 @@ def get_all_filenames_from_data_directory(user_id: int) -> GetAllFilenamesRespon
 
 
 def process_and_persist_business_file(
-    uploadFile: UploadFile,
-    user_id: int,
-    chunk_size: int = 500,
-    chunk_overlap: int = 100,
+        uploadFile: UploadFile,
+        user_id: int,
+        chunk_size: int = 500,
+        chunk_overlap: int = 100,
 ) -> None:
     doc = _create_document_from_file(uploadFile, user_id)
 
@@ -45,6 +46,22 @@ def process_and_persist_business_file(
     metadata_list = [document.metadata for document in splitted_docs]
     vector_list = get_embeddings_with_backoff(text_list)
 
+    client = get_milvus_client()
+
+    filename = metadata_list[0]["filename"]
+    existing_entities = client.query(
+        collection_name=MILVUS_COLLECTION,
+        filter=f'filename == "{filename}"',
+        output_fields=["id"]
+    )
+
+    if existing_entities:
+        existing_ids = [entity["id"] for entity in existing_entities]
+        client.delete(
+            collection_name=MILVUS_COLLECTION,
+            pks=existing_ids
+        )
+
     list_of_rows = [
         {
             "filename": metadata["filename"],
@@ -55,7 +72,7 @@ def process_and_persist_business_file(
         }
         for text, metadata, vector in zip(text_list, metadata_list, vector_list)
     ]
-    get_milvus_client().insert(MILVUS_COLLECTION, list_of_rows)
+    client.insert(MILVUS_COLLECTION, list_of_rows)
 
 
 def purge_data_directory() -> None:
@@ -65,8 +82,17 @@ def purge_data_directory() -> None:
 
 def store_file_in_data_directory(filename: str, file: typing.BinaryIO) -> None:
     file_path = os.path.join(DATA_DIRECTORY_PATH, filename)
+    content = file.read()
+    encoding = chardet.detect(content)['encoding']
+    if encoding.lower() != 'utf-8':
+        try:
+            decoded_content = content.decode(encoding)
+            content = decoded_content.encode('utf-8')
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Unable to decode file: {e}")
+
     with open(file_path, "wb") as buffer:
-        buffer.write(file.read())
+        buffer.write(content)
 
 
 def _create_document_from_file(uploadFile: UploadFile, user_id: int) -> list[Document]:

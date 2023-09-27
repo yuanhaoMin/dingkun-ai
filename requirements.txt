@@ -24,8 +24,8 @@ tenacity==8.2.3
 tiktoken==0.5.1
 uvicorn==0.23.2
 xpinyin==0.7.6
-
 jsonschema==4.19.0
 mysqlclient==2.2.0
 pdfminer.six==20221105
 python-multipart==0.0.6
+chardet==5.2.0

@@ -8,7 +8,7 @@ from app.router import (
     dashboard_router,
     data_visualization_router,
     helper_router,
-    visitor_router,
+    visitor_router, global_command_router,
 )
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -32,6 +32,7 @@ app.include_router(dashboard_router.router)
 app.include_router(data_visualization_router.router)
 app.include_router(helper_router.router)
 app.include_router(visitor_router.router)
+app.include_router(global_command_router.router)
 
 
 @app.on_event("startup")
