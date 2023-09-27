@@ -3,10 +3,10 @@ import requests
 
 from app.config.environment import get_openai_key
 from fastapi import HTTPException
-from langchain import OpenAI
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from openai import ChatCompletion
-from tenacity import retry, stop_after_attempt, wait_random_exponential 
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ def retrieve_langchain_chat_completion_llm(model_name: str):
         streaming=True,
         temperature=0,
     )
+
 
 def retrieve_langchain_completion_llm(model_name: str):
     return OpenAI(

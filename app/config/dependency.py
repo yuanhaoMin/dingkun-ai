@@ -14,14 +14,15 @@ Generate requirements.txt
 Install dependencies
     pip install --upgrade -r requirements.txt
 """
-import backup # For embedding cosine similarity
+import backup  # For embedding cosine similarity
+import chardet
 import dotenv
 import matplotlib  # For data visualization
 import pandas  # For csv agent
-import plotly # For openai.embeddings_utils
-import pyarrow # For pandas
-import scipy # For openai.embeddings_utils
-import sklearn # For openai.embeddings_utils
+import plotly  # For openai.embeddings_utils
+import pyarrow  # For pandas
+import scipy  # For openai.embeddings_utils
+import sklearn  # For openai.embeddings_utils
 import tabulate  # For csv agent
 import tiktoken
 import uvicorn
