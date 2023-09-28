@@ -6,6 +6,37 @@ functions = [
     "name": None
   },
   {
+    "route": "OneClickSearch",
+    "operation": "all_in-one_search",
+    "text": "一键搜索人员标签车辆部门",
+  },
+  {
+    "route": "OneClickSearch",
+    "operation": "all_in-one_search",
+    "text": "一键搜索人员",
+  },
+  {
+    "route": "OneClickSearch",
+    "operation": "all_in-one_search",
+    "text": "一键搜索标签",
+  },
+  {
+    "route": "OneClickSearch",
+    "operation": "all_in-one_search",
+    "text": "一键搜索车辆",
+  },
+  {
+    "route": "OneClickSearch",
+    "operation": "all_in-one_search",
+    "text": "一键搜索部门",
+  },
+  {
+    "route": "Track",
+    "operation": "view_individual_real_time_track",
+    "text": "查看特定人员位置",
+    "name": None
+  },
+  {
     "route": "Track",
     "operation": "view_individual_history_track",
     "text": "查询人员的历史轨迹",
@@ -87,6 +118,11 @@ functions = [
     "route": "Track",
     "operation": "navigate_to_Track",
     "text": "跳转到轨迹页面"
+  },
+  {
+    "route": "OneClickSearch",
+    "operation": "navigate_to_one_search",
+    "text": "跳转到一键搜索页面",
   },
   {
     "route": "Screen",

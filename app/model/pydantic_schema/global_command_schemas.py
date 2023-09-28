@@ -6,6 +6,7 @@ class Route(str, Enum):
     Track = "Track"
     Screen = "Screen"
     Help = "Help"
+    OneClickSearch = "OneClickSearch"
 
 
 class VoiceRedirectRequest(BaseModel):
