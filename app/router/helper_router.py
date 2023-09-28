@@ -5,7 +5,8 @@ from app.model.pydantic_schema.helper_schemas import (
     ChatWithDocumentRequest,
     GetAllFilenamesResponse,
 )
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Response
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,19 @@ ALLOWED_FILE_EXTENSIONS = ["doc", "docx", "txt", "pdf"]
 @router.post("/dialog/")
 def chat_with_document(request: ChatWithDocumentRequest):
     result = helper_chat_logic.chat(
-        session_id=request.session_id, user_message=request.user_message
+        session_id=request.session_id, user_message=request.user_message, stream=False
     )
     return {"result": result}
+
+
+@router.get("/dialog-stream", response_class=StreamingResponse)
+def stream_completion(session_id: str, user_message: str) -> StreamingResponse:
+    return StreamingResponse(
+        helper_chat_logic.chat(
+            session_id=session_id, user_message=user_message, stream=True
+        ),
+        media_type="text/event-stream",
+    )
 
 
 @router.post("/analyse-data-file/")

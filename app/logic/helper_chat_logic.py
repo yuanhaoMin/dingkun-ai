@@ -7,15 +7,18 @@ from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.util.file_util import create_prompt_from_template_file
 from app.util.openai_util import (
     chat_completion_no_functions,
-    retrieve_langchain_completion_llm
+    retrieve_langchain_completion_llm,
 )
+from app.util.openai_stream_util import chat_completion_stream_no_functions
 from fastapi import HTTPException
 from langchain.agents import create_csv_agent
 from langchain.agents.agent_types import AgentType
 from langchain.embeddings import OpenAIEmbeddings
 
-from app.util.structured_text_util import update_missing_json_values_with_llm, \
-    determine_extraction_function_based_on_missing_data
+from app.util.structured_text_util import (
+    update_missing_json_values_with_llm,
+    determine_extraction_function_based_on_missing_data,
+)
 
 _MAX_DISTANCE = 0.37
 _MAX_RELEVANT_DOCS = 2
@@ -45,7 +48,7 @@ def chat_with_data_file(filename: str, user_message: str) -> str:
     return agent.run(user_message + "\nReply in 中文")
 
 
-def chat(session_id: str, user_message: str) -> str:
+def chat(session_id: str, user_message: str, stream: bool) -> str:
     conversation = _manage_session(session_id)
     is_function_call, relevant_docs = _get_query_response(
         query=user_message,
@@ -57,7 +60,7 @@ def chat(session_id: str, user_message: str) -> str:
     if is_function_call:
         return _handle_function_call(relevant_docs, user_message)
     else:
-        return _handle_regular_chat(conversation, relevant_docs, user_message)
+        return _handle_regular_chat(conversation, relevant_docs, user_message, stream)
 
 
 def _manage_session(session_id: str) -> Conversation:
@@ -73,17 +76,28 @@ def _manage_session(session_id: str) -> Conversation:
 
 
 def _get_query_response(
-        query: str,
-        milvus_collection_name: str,
-        max_docs: int,
-        max_distance: float,
+    query: str,
+    milvus_collection_name: str,
+    max_docs: int,
+    max_distance: float,
 ) -> tuple[bool, dict]:
     embedded_user_message = OpenAIEmbeddings().embed_query(query)
     response = get_milvus_client().search(
         collection_name=milvus_collection_name,
         data=[embedded_user_message],
         limit=5,
-        output_fields=["text", "distance", "route", "start_time", "name", "end_time", "page", "listRows", "label", "operation"],
+        output_fields=[
+            "text",
+            "distance",
+            "route",
+            "start_time",
+            "name",
+            "end_time",
+            "page",
+            "listRows",
+            "label",
+            "operation",
+        ],
     )
     filtered_docs = [doc for doc in response[0] if doc["distance"] < max_distance]
     # The most relevant document is function call
@@ -91,39 +105,48 @@ def _get_query_response(
         return True, filtered_docs
     # Otherwise, return the most relevant documents
     else:
-        return False, filtered_docs[: max_docs]
+        return False, filtered_docs[:max_docs]
 
 
 def _handle_function_call(relevant_docs: list, user_message: str) -> dict:
     most_relevant_doc = relevant_docs[0]["entity"]
-    function_descriptions = determine_extraction_function_based_on_missing_data(most_relevant_doc)
+    function_descriptions = determine_extraction_function_based_on_missing_data(
+        most_relevant_doc
+    )
 
     if not function_descriptions:
         return most_relevant_doc
     return update_missing_json_values_with_llm(
         json_data=most_relevant_doc,
         question=user_message,
-        function_descriptions=function_descriptions
+        function_descriptions=function_descriptions,
     )
 
 
-def _handle_regular_chat(conversation: Conversation, relevant_docs: list, user_message: str) -> str:
+def _handle_regular_chat(
+    conversation: Conversation, relevant_docs: list, user_message: str, stream: bool
+) -> str:
     relevant_text = "\n".join([doc["entity"]["text"] for doc in relevant_docs])
     user_message_with_hint = _construct_user_message_with_hint(
         user_message, relevant_text
     )
-    ai_message = chat_completion_no_functions(
-        [{"role": "user", "content": user_message_with_hint}]
-    )
-
-    conversation.messages.extend(
-        [
-            {"role": "user", "content": user_message},
-            {"role": "assistant", "content": ai_message},
-        ]
-    )
-    conversation.prune_messages()
-    return ai_message
+    if stream:
+        return chat_completion_stream_no_functions(
+            conversation=conversation,
+            messages=[{"role": "user", "content": user_message_with_hint}],
+            user_message_to_save=user_message,
+        )
+    else:
+        ai_message = chat_completion_no_functions(
+            messages=[{"role": "user", "content": user_message_with_hint}]
+        )
+        conversation.extend_and_prune(
+            [
+                {"role": "user", "content": user_message},
+                {"role": "assistant", "content": ai_message},
+            ]
+        )
+        return ai_message
 
 
 def _construct_user_message_with_hint(user_message: str, relevant_text: str) -> str:
