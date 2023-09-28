@@ -37,12 +37,12 @@ functions = [
     "text": "查看在线人员列表"
   },
   {
-    "route": "Screen",
+    "route": "Track",
     "operation": "view_offline_individual_list",
     "text": "查看离线人员列表"
   },
   {
-    "route": "Screen",
+    "route": "Track",
     "operation": "view_online_vehicle_list",
     "text": "查看在线车辆列表"
   },
