@@ -123,5 +123,10 @@ functions = [
     "route": "Track",
     "operation": "start_tracking",
     "text": "定位追踪"
-  }
+  },
+  {
+    "route": "Track",
+    "operation": "navigate_to_Track",
+    "text": "返回系统"
+  },
 ]
