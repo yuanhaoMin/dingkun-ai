@@ -32,7 +32,7 @@ functions = [
     "name": None
   },
   {
-    "route": "Screen",
+    "route": "Track",
     "operation": "view_online_individual_list",
     "text": "查看在线人员列表"
   },
