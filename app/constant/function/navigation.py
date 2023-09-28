@@ -113,5 +113,15 @@ functions = [
     "route": "Screen",
     "operation": "close_chart",
     "text": "关闭列表",
+  },
+  {
+    "route": "Track",
+    "operation": "stop_tracking",
+    "text": "退出追踪"
+  },
+  {
+    "route": "Track",
+    "operation": "start_tracking",
+    "text": "定位追踪"
   }
 ]
