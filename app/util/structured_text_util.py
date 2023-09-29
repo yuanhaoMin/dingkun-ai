@@ -2,8 +2,11 @@ import json
 
 from langchain.schema import SystemMessage, HumanMessage
 
-from app.constant.function.helper_navigation import name_start_time_end_time_extract, name_extract, \
-    name_time_page_listRows_extract
+from app.constant.function.helper_navigation import (
+    name_start_time_end_time_extract,
+    name_extract,
+    name_time_page_listRows_extract,
+)
 from app.util.openai_util import retrieve_langchain_chat_completion_llm
 
 
@@ -28,12 +31,15 @@ def determine_extraction_function_based_on_missing_data(json_data: dict):
     return None
 
 
-def update_missing_json_values_with_llm(json_data: dict, question: str, function_descriptions: str) -> dict:
-    system_prompt = '''Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.
-        please reply in Chinese.要告诉用户缺失的值。'''
-    llm = retrieve_langchain_chat_completion_llm(model_name='gpt-3.5-turbo')
+def update_missing_json_values_with_llm(
+    json_data: dict, question: str, function_descriptions: str
+) -> dict:
+    system_prompt = """Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. 要用中文询问用户缺失的值"""
+    llm = retrieve_langchain_chat_completion_llm(model_name="gpt-3.5-turbo")
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=question)]
-    response = llm.predict_messages(messages, functions=function_descriptions, function_call={"name": "extracting"})
+    response = llm.predict_messages(
+        messages, functions=function_descriptions, function_call={"name": "extracting"}
+    )
     function_call = response.additional_kwargs.get("function_call")
     if function_call:
         arguments = json.loads(function_call["arguments"])

@@ -1,7 +1,6 @@
 import logging
 
 from app.config.environment import get_openai_key
-from app.model.conversation import Conversation
 from app.model.pydantic_schema.event_data_schemas import EventData
 from fastapi import HTTPException
 from openai import ChatCompletion
@@ -9,9 +8,7 @@ from openai import ChatCompletion
 logger = logging.getLogger(__name__)
 
 
-def chat_completion_stream_no_functions(
-    conversation: Conversation, messages: list[dict], user_message_to_save: str
-) -> str:
+def chat_completion_stream_no_functions(messages: list[dict]) -> str:
     contents = []
     event_data = EventData()
     retry_count = 0
@@ -35,11 +32,8 @@ def chat_completion_stream_no_functions(
                     yield "data: %s\n\n" % event_data.model_dump_json()
                 if finish_reason == "stop":
                     full_response_text = "".join(contents)
-                    conversation.extend_and_prune(
-                        [
-                            {"role": "user", "content": user_message_to_save},
-                            {"role": "assistant", "content": full_response_text},
-                        ]
+                    messages.append(
+                        {"role": "assistant", "content": full_response_text}
                     )
                     event_data.hasEnd = True
                     yield "data: %s\n\n" % event_data.model_dump_json()
