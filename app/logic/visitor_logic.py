@@ -1,109 +1,68 @@
 import json
-from app.util.json_util import fix_and_parse_json
-from app.util.openai_util import completion, Conversation
-from app.util.text_util import create_prompt_from_template_file
-from datetime import datetime, timedelta
-from collections import OrderedDict
-from typing import List
 import logging
+from app.model.session_manager import SessionManager
+from app.util.file_util import create_prompt_from_template_file
+from app.util.json_util import fix_and_parse_json
+from app.util.openai_util import chat_completion_no_functions
 from app.util.time_utll import get_current_date_and_day
-
-SESSION_STORE = OrderedDict()
-MAX_ATTEMPTS = 3
-MAX_SESSION_COUNT = 1000
+from fastapi import HTTPException
+from typing import List
 
 
-def determine_registration_function_call(sessionId: str, text: str, department_names: List[str]) -> str:
-    if not department_names:
-        department_names = []
-    current_date, day_of_week = get_current_date_and_day()
-    departments_str = ",".join(department_names)
-    replacements = {"current_date:": current_date,
-                    "day_of_week:": day_of_week,
-                    "departments:": departments_str
-                    }
-    prompt = create_prompt_from_template_file(
-        filename="visitor_register_prompts", replacements=replacements
+def determine_registration_function_call(
+    session_id: str, user_message: str, department_names: List[str], history_data=None
+) -> str:
+    # 测试中发现如果帮助中心和访客登记同时开启, 会话会混淆. 需要保证这里是临时会话
+    temp_session_id = session_id + "_temp"
+    session_manager = SessionManager()
+    department_str = ",".join(department_names) if department_names else ""
+
+    system_message = _prepare_system_message(department_str)
+
+    if history_data:
+        parsed_history_data = json.loads(history_data)
+        if _contains_non_null_values(parsed_history_data):
+            user_message = f"Current situation: {history_data}. " + user_message
+
+    conversation = session_manager.retrieve_or_create_session_conversation(
+        session_id=temp_session_id, system_message=system_message
     )
 
-    if sessionId not in SESSION_STORE:
-        conversation = Conversation(prompt, num_of_round=5)
-        SESSION_STORE[sessionId] = {
-            "conversation": conversation,
-            "timestamp": datetime.now()
-        }
-    else:
-        conversation = SESSION_STORE[sessionId]["conversation"]
-        SESSION_STORE[sessionId]["timestamp"] = datetime.now()
-
-    attempts = 0
-    while attempts < MAX_ATTEMPTS:
-        response = conversation.ask(text + '''(Only return the specified JSON array relevant to the context, even if 
-        user requests do not align with the pre-defined scenario. Even without accompanying personnel, return the 
-        complete array with both objects. Retain the previously entered JSON unless explicitly changed by the user. 
-        Ensure: 1. Proper bracket pairing: Each '{' matches with '}', and each '[' with ']'. 2. Correct comma 
-        placement: Ensure no trailing comma after the last element or key-value pair.) '''
-)
-        conversation.save_messages_to_file()
-        remove_expired_sessions()
-        prune_sessions()
+    for _ in range(3):  # 3 attempts
+        ai_message = conversation.ask(
+            user_message + """(Only return...Correct comma placement.) """
+        )
         try:
-            # 尝试修复和解析 JSON
-            fixed_response = fix_and_parse_json(response)
-            # 合并之前的数据，如果有的话
-            if SESSION_STORE[sessionId].get("previous_response"):
-                fixed_response = merge_previous_data(SESSION_STORE[sessionId]["previous_response"], fixed_response)
-
-            # 保存这次的响应作为下一次的"之前的响应"
-            SESSION_STORE[sessionId]["previous_response"] = fixed_response
-
-            return fixed_response  # 如果成功，直接返回修复后的 JSON
+            parsed_json = fix_and_parse_json(ai_message)
+            session_manager.remove_session(temp_session_id)
+            return parsed_json
         except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse JSON. AI's response was: {response}")
-            # 如果失败，捕获异常并告知 AI
-            text = "Please check your JSON format and only reply with valid JSON data."
-            conversation.ask(text)
-            attempts += 1
-
-    # 超过最大尝试次数，返回 None
-    return {}
-
-
-def prune_sessions():
-    # 每次添加新的 sessionId 或更新数据时，检查长度，并移除最旧直到满足条件
-    while len(SESSION_STORE) > MAX_SESSION_COUNT:
-        SESSION_STORE.popitem(last=False)
+            logging.error(f"Failed to parse JSON. AI's response was: {ai_message}")
+            conversation.ask(
+                f"Failed to parse JSON with error: \n{e}\nPlease check your JSON format and only reply with valid JSON data"
+            )
+    raise HTTPException(
+        status_code=500,
+        detail="Failed to parse JSON after 3 attempts. Please check your JSON format and only reply with valid JSON data",
+    )
 
 
-def remove_expired_sessions():
-    expiration_time = datetime.now() - timedelta(minutes=5)
-    expired_keys = [key for key, value in SESSION_STORE.items() if
-                    value.get('timestamp') and value.get('timestamp') < expiration_time]
+def _prepare_system_message(departments_str: str) -> str:
+    current_date, day_of_week = get_current_date_and_day()
+    replacements = {
+        "current_date:": current_date,
+        "day_of_week:": day_of_week,
+        "departments:": departments_str,
+    }
+    return create_prompt_from_template_file(
+        filename="visitor_register_prompt", replacements=replacements
+    )
 
-    for key, value in SESSION_STORE.items():
-        if not value.get('timestamp'):
-            logging.warning(f"Session {key} lacks a timestamp!")
 
-    for key in expired_keys:
-        SESSION_STORE.pop(key)
-
-
-def merge_previous_data(previous: list, current: list) -> list:
-    for i in range(len(previous)):
-        prev_dict = previous[i]
-        curr_dict = current[i]
-        for key in prev_dict.keys():
-            if key not in curr_dict:
-                continue
-            if isinstance(prev_dict[key], dict) and isinstance(curr_dict[key], dict):
-                merge_previous_data([prev_dict[key]], [curr_dict[key]])  # 转为列表以复用这个函数
-            elif isinstance(prev_dict[key], list) and isinstance(curr_dict[key], list):  # 新增的列表合并逻辑
-                for j in range(min(len(prev_dict[key]), len(curr_dict[key]))):
-                    if prev_dict[key][j] != "null" and curr_dict[key][j] == "null":
-                        curr_dict[key][j] = prev_dict[key][j]
-            else:
-                # 修改这里的检查逻辑，考虑到 "null"
-                if (prev_dict[key] is not None and prev_dict[key] != "null") and (curr_dict[key] is None or curr_dict[key] == "null"):
-                    curr_dict[key] = prev_dict[key]
-    return current
-
+def _contains_non_null_values(data: any) -> bool:
+    if isinstance(data, dict):
+        return any(_contains_non_null_values(value) for value in data.values())
+    elif isinstance(data, list):
+        return any(_contains_non_null_values(item) for item in data)
+    else:
+        return data is not None

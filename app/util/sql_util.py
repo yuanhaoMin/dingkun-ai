@@ -1,17 +1,8 @@
-from app.db.session.mysql_db import SessionLocal
+import sqlparse
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect
 from sqlalchemy import text
-from typing import Dict, List, Union, Type
-import sqlparse
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from typing import Type, Union
 
 
 def execute_sql(db: Session, sql: str, limit: int = 5):
@@ -27,7 +18,7 @@ def execute_sql(db: Session, sql: str, limit: int = 5):
 
 def validate_sql_against_model(
     sql: str, model: Type
-) -> Dict[str, Union[bool, List[str]]]:
+) -> dict[str, Union[bool, list[str]]]:
     """
     验证给定的 SQL 语句是否符合 SQLAlchemy 模型的结构。
 

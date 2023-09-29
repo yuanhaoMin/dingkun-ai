@@ -1,0 +1,36 @@
+from app.util.openai_util import chat_completion_no_functions
+
+
+class Conversation:
+    def __init__(self, num_of_rounds: int, system_message: str = None):
+        self.num_of_rounds = num_of_rounds
+        self.messages = []
+        if system_message:
+            self.messages.append({"role": "system", "content": system_message})
+
+    def ask(self, question):
+        self.prune_messages()
+        self.messages.append({"role": "user", "content": question})
+        ai_response = chat_completion_no_functions(self.messages)
+        self.messages.append({"role": "assistant", "content": ai_response})
+        return ai_response
+
+    def extend_and_prune(self, messages: list):
+        self.messages.extend(messages)
+        self.prune_messages()
+
+    def prune_messages(self):
+        if len(self.messages) > self.num_of_rounds * 2:
+            del self.messages[1:3]
+
+    def get_latest_user_message(self):
+        for message in reversed(self.messages):
+            if message["role"] == "user":
+                return message["content"]
+        return None
+
+    def get_latest_assistant_message(self):
+        for message in reversed(self.messages):
+            if message["role"] == "assistant":
+                return message["content"]
+        return None
