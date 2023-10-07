@@ -3,7 +3,6 @@ import logging
 from app.model.session_manager import SessionManager
 from app.util.file_util import create_prompt_from_template_file
 from app.util.json_util import fix_and_parse_json
-from app.util.openai_util import chat_completion_no_functions
 from app.util.time_utll import get_current_date_and_day
 from fastapi import HTTPException
 from typing import List
