@@ -120,7 +120,10 @@ def _handle_function_call(relevant_docs: list, user_message: str) -> dict:
             question=user_message,
             function_descriptions=function_descriptions,
         )
-        yield "data: %s\n\n" % json.dumps(result)
+        if isinstance(result, str):
+            yield f"data: {result}\n\n"
+        else:
+            yield "data: %s\n\n" % json.dumps(result, ensure_ascii=False)
 
 
 def _handle_regular_chat(

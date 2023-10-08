@@ -7,27 +7,27 @@ functions = [
   },
   {
     "route": "OneClickSearch",
-    "operation": "all_in-one_search",
+    "operation": "all_in_one_search",
     "text": "一键搜索人员标签车辆部门",
   },
   {
     "route": "OneClickSearch",
-    "operation": "all_in-one_search",
+    "operation": "all_in_one_search",
     "text": "一键搜索人员",
   },
   {
     "route": "OneClickSearch",
-    "operation": "all_in-one_search",
+    "operation": "all_in_one_search",
     "text": "一键搜索标签",
   },
   {
     "route": "OneClickSearch",
-    "operation": "all_in-one_search",
+    "operation": "all_in_one_search",
     "text": "一键搜索车辆",
   },
   {
     "route": "OneClickSearch",
-    "operation": "all_in-one_search",
+    "operation": "all_in_one_search",
     "text": "一键搜索部门",
   },
   {
