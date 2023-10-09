@@ -9,11 +9,15 @@ from app.constant.function.helper_navigation import (
 )
 from app.util.openai_util import retrieve_langchain_chat_completion_llm
 from app.util.time_utll import get_current_datetime
+from typing import Union
+
 
 current_datetime = get_current_datetime()
 
 
-def determine_extraction_function_based_on_missing_data(json_data: dict):
+def determine_extraction_function_based_on_missing_data(
+    json_data: dict,
+) -> Union[dict, None]:
     missing_keys_set = {key for key, value in json_data.items() if value is None}
 
     if not missing_keys_set:
@@ -36,7 +40,7 @@ def determine_extraction_function_based_on_missing_data(json_data: dict):
 
 def update_missing_json_values_with_llm(
     json_data: dict, question: str, function_descriptions: str
-) -> dict:
+) -> Union[dict, str]:
     system_prompt = f"""Don't make assumptions about what values to plug into functions. Ask for clarification if a 
     user request is ambiguous. The current time is {current_datetime} """
     llm = retrieve_langchain_chat_completion_llm(model_name="gpt-3.5-turbo")

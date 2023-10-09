@@ -1,27 +1,26 @@
 import json
 import os
 import textwrap
+from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.constant.path_constants import CONSTANT_DIRECTORY_PATH, DATA_DIRECTORY_PATH
 from app.model.conversation import Conversation
-from app.model.pydantic_schema.event_data_schemas import EventData
 from app.model.session_manager import SessionManager
-from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
 from app.util.file_util import create_prompt_from_template_file
 from app.util.openai_util import (
     chat_completion_no_functions,
     retrieve_langchain_completion_llm,
 )
 from app.util.openai_stream_util import chat_completion_stream_no_functions
-from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
-from langchain.agents import create_csv_agent
-from langchain.agents.agent_types import AgentType
-from langchain.embeddings import OpenAIEmbeddings
-
 from app.util.structured_text_util import (
     update_missing_json_values_with_llm,
     determine_extraction_function_based_on_missing_data,
 )
+from fastapi import HTTPException
+from langchain.agents import create_csv_agent
+from langchain.agents.agent_types import AgentType
+from langchain.embeddings import OpenAIEmbeddings
+from typing import Union
+
 
 # 经过大量测试, 只有0.37和0.38比较合适, 改别的值请慎重并重新测试
 _SEARCH_MAX_DISTANCE = 0.38
@@ -96,7 +95,7 @@ def _get_query_response(
             "listRows",
             "label",
             "operation",
-            "content"
+            "content",
         ],
     )
     filtered_docs = [doc for doc in response[0] if doc["distance"] < max_distance]
@@ -110,9 +109,9 @@ def _get_query_response(
 
 def _handle_function_call(relevant_docs: list, user_message: str) -> dict:
     most_relevant_doc = relevant_docs[0]["entity"]
-    function_descriptions = determine_extraction_function_based_on_missing_data(
-        most_relevant_doc
-    )
+    function_descriptions: Union[
+        dict, None
+    ] = determine_extraction_function_based_on_missing_data(most_relevant_doc)
     if not function_descriptions:
         yield "data: %s\n\n" % most_relevant_doc
     else:
@@ -136,7 +135,9 @@ def _handle_regular_chat(
     user_message_with_hint = _construct_user_message_with_hint(user_message, hint_docs)
     conversation.messages.append({"role": "user", "content": user_message_with_hint})
     if stream:
-        return chat_completion_stream_no_functions(messages=conversation.messages, model='gpt-4')
+        return chat_completion_stream_no_functions(
+            messages=conversation.messages, model="gpt-4"
+        )
     else:
         ai_message = chat_completion_no_functions(messages=conversation.messages)
         conversation.messages.append({"role": "assistant", "content": ai_message})
