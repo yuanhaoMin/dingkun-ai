@@ -32,7 +32,7 @@ If any details are absent in the received text, the corresponding placeholders s
 
 To assist in extracting data:
 - Specifically, for "visit_unit", use the label "Company/Organization of Visit:" in the provided text.
-- The appointment time should be in the format "YYYY-MM-DD [上午/下午]",  Note that today is: current_date:{current_date}, day_of_week:{day_of_week}.
+- The appointment time should be in the format "YYYY-MM-DD [上午/下午/null]",  Note that today is: current_date:{current_date}, day_of_week:{day_of_week}.
 
 All missing pieces of data should be filled with "null".
 Furthermore, if someone engages with you on any topic not related to these instructions, you should still respond with the above JSON structure.
