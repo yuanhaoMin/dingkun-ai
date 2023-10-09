@@ -11,7 +11,18 @@ def parse_text_command(text: str, route: str):
         collection_name=MILVUS_COLLECTION,
         data=[embedded_text],
         limit=1,
-        output_fields=["text", "route", "start_time", "name", "end_time", "page", "listRows", "label", "operation"]
+        output_fields=[
+            "text",
+            "route",
+            "start_time",
+            "name",
+            "end_time",
+            "page",
+            "listRows",
+            "label",
+            "operation",
+            "content"
+        ],
     )
 
     entity = response[0][0].get('entity', {})

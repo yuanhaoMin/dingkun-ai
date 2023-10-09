@@ -1,3 +1,7 @@
+from app.util.time_utll import get_current_day_times
+
+start_time, end_time = get_current_day_times()
+
 name_time_page_listRows_extract = [
     {
         "name": "extracting",
@@ -11,11 +15,11 @@ name_time_page_listRows_extract = [
                 },
                 "start_time": {
                     "type": "string",
-                    "description": "Start time in the format '2023-09-20 11:00'."
+                    "description": f"Start time in the format '{start_time}'."
                 },
                 "end_time": {
                     "type": "string",
-                    "description": "End time in the format '2023-09-20 12:00'. '"
+                    "description": f"End time in the format '{end_time}'."
                 },
                 "page": {
                     "type": "integer",
@@ -43,11 +47,11 @@ name_start_time_end_time_extract = [
                 },
                 "start_time": {
                     "type": "string",
-                    "description": "Start time in the format '2023-09-20 11:00'."
+                    "description": f"Start time in the format '{start_time}'."
                 },
                 "end_time": {
                     "type": "string",
-                    "description": "End time in the format '2023-09-20 12:00'. '"
+                    "description": f"End time in the format '{end_time}'."
                 }
             },
             "required": ["name", "start_time", "end_time"]

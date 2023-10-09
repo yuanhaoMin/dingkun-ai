@@ -8,7 +8,7 @@ from openai import ChatCompletion
 logger = logging.getLogger(__name__)
 
 
-def chat_completion_stream_no_functions(messages: list[dict]) -> str:
+def chat_completion_stream_no_functions(messages: list[dict], model: str = "gpt-3.5-turbo") -> str:
     contents = []
     event_data = EventData()
     retry_count = 0
@@ -17,7 +17,7 @@ def chat_completion_stream_no_functions(messages: list[dict]) -> str:
         try:
             response = ChatCompletion.create(
                 api_key=get_openai_key(),
-                model="gpt-3.5-turbo",
+                model=model,
                 messages=messages,
                 request_timeout=2,
                 temperature=0,
@@ -50,3 +50,4 @@ def chat_completion_stream_no_functions(messages: list[dict]) -> str:
                     "Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
+

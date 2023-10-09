@@ -24,8 +24,8 @@ from app.util.structured_text_util import (
 )
 
 # 经过大量测试, 只有0.37和0.38比较合适, 改别的值请慎重并重新测试
-_SEARCH_MAX_DISTANCE = 0.37
-_SEARCH_MAX_RELEVANT_DOCS = 2
+_SEARCH_MAX_DISTANCE = 0.38
+_SEARCH_MAX_RELEVANT_DOCS = 3
 _CONVERSATION_MAX_ROUNDS_SAVED = 3
 
 
@@ -96,6 +96,7 @@ def _get_query_response(
             "listRows",
             "label",
             "operation",
+            "content"
         ],
     )
     filtered_docs = [doc for doc in response[0] if doc["distance"] < max_distance]
@@ -135,7 +136,7 @@ def _handle_regular_chat(
     user_message_with_hint = _construct_user_message_with_hint(user_message, hint_docs)
     conversation.messages.append({"role": "user", "content": user_message_with_hint})
     if stream:
-        return chat_completion_stream_no_functions(messages=conversation.messages)
+        return chat_completion_stream_no_functions(messages=conversation.messages, model='gpt-4')
     else:
         ai_message = chat_completion_no_functions(messages=conversation.messages)
         conversation.messages.append({"role": "assistant", "content": ai_message})

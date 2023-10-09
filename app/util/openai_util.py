@@ -42,7 +42,7 @@ def chat_completion_no_functions(messages: list[dict]) -> str:
                 )
             else:
                 logger.warning(
-                    "Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
+                    f"Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
 

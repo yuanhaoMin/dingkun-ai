@@ -1,3 +1,22 @@
+show_zoomed_area_content = '''可以对区域进行标记，标记之后只需点击标记点的名称或者跟我说标记点的名称，就可以直接查看做了标记的区域了；
+
+创建标记点的方法：
+
+步骤1 点击实时轨迹中的标记点按钮，弹窗出标记点列表，此时鼠标是带标记符号的，如下图所示；
+
+![image](http://192.168.1.206:9090/helper-qa/%E6%A0%87%E8%AE%B0%E6%8C%87%E5%AF%BC%E6%AD%A5%E9%AA%A41.png)
+
+步骤2 只要在地图上点击您想要标记的位置，如下图所示；
+
+![image](http://192.168.1.206:9090/helper-qa/%E6%A0%87%E8%AE%B0%E6%8C%87%E5%AF%BC%E6%AD%A5%E9%AA%A42.png)
+
+步骤3 给标记点命名，即可完成标记，示意图如下所示；
+
+![image](http://192.168.1.206:9090/helper-qa/%E6%A0%87%E8%AE%B0%E6%8C%87%E5%AF%BC%E6%AD%A5%E9%AA%A43.png)
+
+
+'''
+
 functions = [
   {
     "route": "Track",
@@ -165,4 +184,11 @@ functions = [
     "operation": "navigate_to_Track",
     "text": "返回系统"
   },
+  {
+    "route": "Help",
+    "operation": "show_zoomed_area",
+    "text": "查看局部区域情况",
+    "content": show_zoomed_area_content
+  },
 ]
+

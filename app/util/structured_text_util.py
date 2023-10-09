@@ -8,6 +8,9 @@ from app.constant.function.helper_navigation import (
     name_time_page_listRows_extract,
 )
 from app.util.openai_util import retrieve_langchain_chat_completion_llm
+from app.util.time_utll import get_current_datetime
+
+current_datetime = get_current_datetime()
 
 
 def determine_extraction_function_based_on_missing_data(json_data: dict):
@@ -34,7 +37,8 @@ def determine_extraction_function_based_on_missing_data(json_data: dict):
 def update_missing_json_values_with_llm(
     json_data: dict, question: str, function_descriptions: str
 ) -> dict:
-    system_prompt = """Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. 要用中文询问用户缺失的值"""
+    system_prompt = f"""Don't make assumptions about what values to plug into functions. Ask for clarification if a 
+    user request is ambiguous. The current time is {current_datetime} """
     llm = retrieve_langchain_chat_completion_llm(model_name="gpt-3.5-turbo")
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=question)]
     response = llm.predict_messages(
