@@ -1,7 +1,7 @@
 import json
 import os
 import textwrap
-from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client
+from app.config.milvus_db import MILVUS_COLLECTION, get_milvus_client, milvus_client_search
 from app.constant.path_constants import CONSTANT_DIRECTORY_PATH, DATA_DIRECTORY_PATH
 from app.model.conversation import Conversation
 from app.model.session_manager import SessionManager
@@ -80,7 +80,7 @@ def _get_query_response(
     max_distance: float,
 ) -> tuple[bool, dict]:
     embedded_user_message = OpenAIEmbeddings().embed_query(query)
-    response = get_milvus_client().search(
+    response = milvus_client_search(
         collection_name=milvus_collection_name,
         data=[embedded_user_message],
         limit=5,

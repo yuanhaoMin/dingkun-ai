@@ -39,7 +39,6 @@ app.include_router(visitor_router.router)
 @app.on_event("startup")
 def startup_event():
     load_dotenv()
-    start_up_logic.generate_embedding_for_scenarios()
 
 
 @app.get("/")

@@ -47,7 +47,7 @@ def chat_completion_stream_no_functions(messages: list[dict], model: str = "gpt-
                 )
             else:
                 logger.warning(
-                    "Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
+                    f"Failed to get chat completion response from OpenAI API. Retrying... Error: {e}"
                 )
                 continue
 

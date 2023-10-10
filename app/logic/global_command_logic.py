@@ -1,6 +1,7 @@
+import time
+import logging
 from langchain.embeddings import OpenAIEmbeddings
-
-from app.config.milvus_db import get_milvus_client, MILVUS_COLLECTION
+from app.config.milvus_db import get_milvus_client, MILVUS_COLLECTION, milvus_client_search
 from app.util.structured_text_util import (
     determine_extraction_function_based_on_missing_data,
     update_missing_json_values_with_llm,
@@ -8,9 +9,17 @@ from app.util.structured_text_util import (
 from typing import Union
 
 
+log = logging.getLogger(__name__)
+
+
 def parse_text_command(text: str, route: str):
+    start_time = time.time()
     embedded_text = OpenAIEmbeddings().embed_query(text)
-    response = get_milvus_client().search(
+    end_time = time.time()
+    log.debug("Embedding time: %s seconds", end_time - start_time)
+
+    start_time = time.time()
+    response = milvus_client_search(
         collection_name=MILVUS_COLLECTION,
         data=[embedded_text],
         limit=1,
@@ -27,13 +36,29 @@ def parse_text_command(text: str, route: str):
             "content",
         ],
     )
+    end_time = time.time()
+    log.debug("Milvus search time: %s seconds", end_time - start_time)
 
+    start_time = time.time()
+    distance = response[0][0].get("distance")
     entity = response[0][0].get("entity", {})
+    end_time = time.time()
+    log.debug("Entity parsing time: %s seconds", end_time - start_time)
 
+    if distance > 0.38:
+        entity["route"] = None
+        entity["operation"] = "stop"
+        entity["text"] = "未能理解您的操作"
+        return entity
+
+    start_time = time.time()
     function_description: Union[
         dict, None
     ] = determine_extraction_function_based_on_missing_data(entity)
+    end_time = time.time()
+    log.debug("Data extraction function time: %s seconds", end_time - start_time)
 
+    start_time = time.time()
     if function_description is None:
         if entity.get("route") == route:
             entity["route"] = None
@@ -45,4 +70,8 @@ def parse_text_command(text: str, route: str):
 
     if updated_entity.get("route") == route:
         updated_entity["route"] = None
+    end_time = time.time()
+    log.debug("Data update time: %s seconds", end_time - start_time)
+
     return updated_entity
+
