@@ -17,12 +17,13 @@ def parse_text_command(text: str, route: str):
     embedded_text = OpenAIEmbeddings().embed_query(text)
     end_time = time.time()
     log.debug("Embedding time: %s seconds", end_time - start_time)
-
     start_time = time.time()
+    filter_condition = f"scope in ['{route}', 'Global']"
     response = milvus_client_search(
         collection_name=MILVUS_COLLECTION,
         data=[embedded_text],
         limit=1,
+        search_filter=filter_condition,
         output_fields=[
             "text",
             "route",
@@ -45,7 +46,7 @@ def parse_text_command(text: str, route: str):
     end_time = time.time()
     log.debug("Entity parsing time: %s seconds", end_time - start_time)
 
-    if distance > 0.38:
+    if distance > 0.3:
         entity["route"] = None
         entity["operation"] = "stop"
         entity["text"] = "未能理解您的操作"

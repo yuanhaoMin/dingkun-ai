@@ -7,7 +7,7 @@ from app.model.pydantic_schema.data_visualization_schemas import VisualizeInSVGR
 from app.util.openai_util import chat_completion_no_functions
 from app.util.file_util import create_prompt_from_template_file
 from app.util.sql_util import execute_sql
-from app.util.time_utll import timeit, get_current_date_and_day
+from app.util.time_util import timeit, get_current_date_and_day
 from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)

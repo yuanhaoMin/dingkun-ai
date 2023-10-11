@@ -2,13 +2,10 @@ import json
 
 from langchain.schema import SystemMessage, HumanMessage
 
-from app.constant.function.helper_navigation import (
-    name_start_time_end_time_extract,
-    name_extract,
-    name_time_page_listRows_extract,
-)
+from app.constant.function.helper_navigation import get_name_time_page_listRows_extract, \
+    get_name_start_time_end_time_extract, get_name_extract
 from app.util.openai_util import retrieve_langchain_chat_completion_llm
-from app.util.time_utll import get_current_datetime
+from app.util.time_util import get_current_datetime
 from typing import Union
 
 
@@ -27,13 +24,13 @@ def determine_extraction_function_based_on_missing_data(
     is_page_listRows_missing = {"page", "listRows"}.issubset(missing_keys_set)
 
     if is_time_keys_missing and is_page_listRows_missing:
-        return name_time_page_listRows_extract
+        return get_name_time_page_listRows_extract
 
     if is_time_keys_missing:
-        return name_start_time_end_time_extract
+        return get_name_start_time_end_time_extract
 
     if "name" in missing_keys_set:
-        return name_extract
+        return get_name_extract
 
     return None
 

@@ -67,6 +67,7 @@ def process_and_persist_business_file(
             "filename": metadata["filename"],
             "text": text,
             "vector": vector,
+            "scope": 'Help',
             "created_by": metadata["user_id"],
             "creation_time": metadata["creation_time"],
         }

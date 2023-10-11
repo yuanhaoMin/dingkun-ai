@@ -21,3 +21,17 @@ Bug修复:
 
 其他变更:
 - 启动项`start_up_logic.generate_embedding_for_scenarios()`，目前用不到
+
+## 1.0.3 - (2023-10-11, 测试dingkunai最新版本)
+Bug修复: 
+- 修复get_current_day_times函数由于只执行一次导致后面获取到过期的时间
+- 增加scope作为跳转页面的参数，缩写精确跳转指令，来修复乱跳转问题
+- 'time_util.py'命名错误，原为'time_utll.py'
+
+其他变更:
+- 增加milvus_client_search，filter参数
+- 调整navigation.py的functions数组，拆分分对应页面跳转功能的数组方便查看
+- 调整帮助中心智能客服，根据需求命名为'定坤'
+- 上传企业文档元数据带上scope字段为'Help'，因为只有在帮助中心才应该匹配到
+- 增加若干导航指令
+- _SEARCH_MAX_DISTANCE由0.38激进的调整至0.45，现在只有距离小于0.3的才会进行跳转页面无需担心距离过大而跳转。测试发现，用户输入短文本时，即使内容与文档分片主题相近，但由于字数差距大，导致距离可能达到0.43以上(如询问我早上9.10分迟到了，怎么办)

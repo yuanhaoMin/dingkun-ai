@@ -2,7 +2,7 @@ import asyncio
 import json
 from app.constant.function import data_visualization_function_call
 from app.constant.function import data_visualization_chart_config
-from app.util.time_utll import get_current_date_and_day
+from app.util.time_util import get_current_date_and_day
 from app.util.openai_util import (
     chat_completion_with_functions,
     chat_completion_no_functions,

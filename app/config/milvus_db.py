@@ -19,11 +19,12 @@ def get_milvus_client() -> MilvusClient:
     return _milvus_client_instance
 
 
-def milvus_client_search(collection_name, data, limit, output_fields):
+def milvus_client_search(collection_name, data, limit, output_fields, search_filter: str = ""):
     try:
         response = get_milvus_client().search(
             collection_name=collection_name,
             data=data,
+            filter=search_filter,
             limit=limit,
             output_fields=output_fields,
             timeout=2.0,
@@ -37,6 +38,7 @@ def milvus_client_search(collection_name, data, limit, output_fields):
         response = get_milvus_client().search(
             collection_name=collection_name,
             data=data,
+            filter=search_filter,
             limit=limit,
             output_fields=output_fields,
         )

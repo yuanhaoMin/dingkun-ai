@@ -1,4 +1,4 @@
-from app.util.time_utll import get_current_date_and_day
+from app.util.time_util import get_current_date_and_day
 
 current_date, day_of_week = get_current_date_and_day()
 

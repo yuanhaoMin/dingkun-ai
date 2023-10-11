@@ -23,7 +23,7 @@ from typing import Union
 
 
 # 经过大量测试, 只有0.37和0.38比较合适, 改别的值请慎重并重新测试
-_SEARCH_MAX_DISTANCE = 0.38
+_SEARCH_MAX_DISTANCE = 0.45
 _SEARCH_MAX_RELEVANT_DOCS = 3
 _CONVERSATION_MAX_ROUNDS_SAVED = 3
 
@@ -80,10 +80,12 @@ def _get_query_response(
     max_distance: float,
 ) -> tuple[bool, dict]:
     embedded_user_message = OpenAIEmbeddings().embed_query(query)
+    filter_condition = "scope in ['Help', 'Global']"
     response = milvus_client_search(
         collection_name=milvus_collection_name,
         data=[embedded_user_message],
         limit=5,
+        search_filter=filter_condition,
         output_fields=[
             "text",
             "distance",
@@ -100,7 +102,7 @@ def _get_query_response(
     )
     filtered_docs = [doc for doc in response[0] if doc["distance"] < max_distance]
     # The most relevant document is function call
-    if filtered_docs and "route" in filtered_docs[0]["entity"]:
+    if filtered_docs and "route" in filtered_docs[0]["entity"] and filtered_docs[0]["distance"] < 0.3:
         return True, filtered_docs
     # Otherwise, return the most relevant documents
     else:

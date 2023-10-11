@@ -8,7 +8,7 @@ from app.constant.schema.dashboard_schemas import (
 )
 from app.config.environment import get_openai_key
 from app.util.openai_util import chat_completion_with_functions
-from app.util.time_utll import get_current_date_and_day, get_current_datetime
+from app.util.time_util import get_current_date_and_day, get_current_datetime
 from openai.embeddings_utils import get_embedding, cosine_similarity
 
 chart_positions = """
