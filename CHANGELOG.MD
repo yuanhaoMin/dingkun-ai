@@ -27,6 +27,7 @@ Bug修复:
 - 修复get_current_day_times函数由于只执行一次导致后面获取到过期的时间
 - 增加scope作为跳转页面的参数，缩写精确跳转指令，来修复乱跳转问题
 - 'time_util.py'命名错误，原为'time_utll.py'
+- 文档问答时不要把跳转信息传给llm
 
 其他变更:
 - 增加milvus_client_search，filter参数

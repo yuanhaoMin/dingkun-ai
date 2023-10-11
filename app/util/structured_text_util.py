@@ -24,13 +24,13 @@ def determine_extraction_function_based_on_missing_data(
     is_page_listRows_missing = {"page", "listRows"}.issubset(missing_keys_set)
 
     if is_time_keys_missing and is_page_listRows_missing:
-        return get_name_time_page_listRows_extract
+        return get_name_time_page_listRows_extract()
 
     if is_time_keys_missing:
-        return get_name_start_time_end_time_extract
+        return get_name_start_time_end_time_extract()
 
     if "name" in missing_keys_set:
-        return get_name_extract
+        return get_name_extract()
 
     return None
 

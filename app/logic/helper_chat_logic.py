@@ -106,6 +106,7 @@ def _get_query_response(
         return True, filtered_docs
     # Otherwise, return the most relevant documents
     else:
+        filtered_docs = [doc for doc in filtered_docs if "route" not in doc["entity"]]
         return False, filtered_docs[:max_docs]
 
 
