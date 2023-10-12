@@ -18,7 +18,8 @@ def parse_text_command(text: str, route: str):
     end_time = time.time()
     log.debug("Embedding time: %s seconds", end_time - start_time)
     start_time = time.time()
-    filter_condition = f"scope in ['{route}', 'Global']"
+    filter_condition = f"scope in ['{route.name}', 'Global']"
+    print(filter_condition)
     response = milvus_client_search(
         collection_name=MILVUS_COLLECTION,
         data=[embedded_text],
