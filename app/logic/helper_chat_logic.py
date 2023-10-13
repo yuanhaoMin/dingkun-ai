@@ -116,7 +116,7 @@ def _handle_function_call(relevant_docs: list, user_message: str) -> dict:
         dict, None
     ] = determine_extraction_function_based_on_missing_data(most_relevant_doc)
     if not function_descriptions:
-        yield "data: %s\n\n" % most_relevant_doc
+        yield "data: %s\n\n" % json.dumps(most_relevant_doc , ensure_ascii=False)
     else:
         result = update_missing_json_values_with_llm(
             json_data=most_relevant_doc,
