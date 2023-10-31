@@ -14,7 +14,7 @@ def get_milvus_client() -> MilvusClient:
     global _milvus_client_instance
     if _milvus_client_instance is None:
         _milvus_client_instance = MilvusClient(
-            uri=get_milvus_uri(), token=get_milvus_token()
+            uri=get_milvus_uri(), token=get_milvus_token(), secure='true'
         )
     return _milvus_client_instance
 
@@ -33,7 +33,7 @@ def milvus_client_search(collection_name, data, limit, output_fields, search_fil
     except:
         global _milvus_client_instance
         _milvus_client_instance = MilvusClient(
-            uri=get_milvus_uri(), token=get_milvus_token()
+            uri=get_milvus_uri(), token=get_milvus_token(), secure='true'
         )
         response = get_milvus_client().search(
             collection_name=collection_name,

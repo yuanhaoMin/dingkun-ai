@@ -8,7 +8,7 @@ from pymilvus import MilvusClient
 
 def process_dict_array(dict_array):
     client = MilvusClient(
-        uri=os.environ.get("MILVUS_URI"), token=os.environ.get("MILVUS_TOKEN")
+        uri=os.environ.get("MILVUS_URI"), token=os.environ.get("MILVUS_TOKEN"), secure='true'
     )
     descriptions = [item["text"] for item in dict_array]
 
